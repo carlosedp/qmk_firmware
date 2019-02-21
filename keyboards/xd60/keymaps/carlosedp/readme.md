@@ -4,9 +4,7 @@ Custom layout with some custom layers. Mac friendly.
 
 ## Layout
 
-![Carlosedp's Layout](https://imgur.com/a/gz5nD6y)
-
-The image reflects the base layer. Will update soon to reflect layer 1.
+[Carlosedp's Layout](https://imgur.com/a/gz5nD6y)
 
 ## Additional Notes
 
