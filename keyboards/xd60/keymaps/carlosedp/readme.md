@@ -4,7 +4,7 @@ Custom layout with some custom layers. Mac friendly.
 
 ## Layout
 
-[Carlosedp's Layout](https://i.imgur.com/lvEqSvU.png)
+![Carlosedp's Layout](https://i.imgur.com/lvEqSvU.png)
 
 ## Additional Notes
 
