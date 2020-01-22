@@ -13,8 +13,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   // 1: Function Layer
   LAYOUT_all(
-      KC_GESC,KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,             KC_F10,   KC_F11,    KC_F12,    KC_DEL,   KC_NO,   \
-      KC_NO,   BL_DEC,  BL_INC,  BL_ON,   BL_OFF,  BL_STEP, KC_NO,   KC_NO,   KC_NO,   KC_NO,             KC_MPLY, KC_BRID,   KC_BRIU,   KC_NO,             \
+      KC_GRAVE,KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,             KC_F10,   KC_F11,    KC_F12,    KC_DEL,   KC_NO,   \
+      KC_NO,   BL_DEC,  BL_INC,  BL_ON,   BL_OFF,  BL_STEP, BL_BRTG, KC_NO,   KC_NO,   KC_NO,             KC_MPLY, KC_BRID,   KC_BRIU,   KC_NO,             \
       MO(1),   RGB_TOG, RGB_MOD, RGB_HUD, RGB_HUI, RGB_SAD, RGB_SAI, RGB_VAD, RGB_VAI, RGB_MODE_PLAIN,    KC_NO,   KC_NO,     KC_NO,     KC_ENT,            \
       KC_LSFT, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_MUTE, KC_VOLD, KC_VOLU,  KC_NO,   KC_RSFT,   KC_PGUP,   KC_INS,            \
       KC_LCTL, KC_LALT, KC_LGUI,                          KC_SPC,                                  KC_RGUI, MO(1), KC_HOME,   KC_PGDOWN, KC_END),
@@ -38,6 +38,12 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt) {
   }
 
   return MACRO_NONE;
+};
+
+void keyboard_post_init_user(void) {
+  // Call the post init code.
+  // KB starts with backlight on, turn off.
+  backlight_toggle();
 };
 
 // Loop
