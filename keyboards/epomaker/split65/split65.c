@@ -226,6 +226,15 @@ void suspend_power_down_kb(void) {
 }
 
 void suspend_wakeup_init_kb(void) {
+    // Give split UART time to stabilize before powering LEDs
+    // This prevents flickering on the slave/right half
+    wait_ms(50);
+
+    // Clear keyboard state to prevent stuck modifiers
+    // This ensures clean state after wake, especially important
+    // when waking with modifier keys from the slave half
+    clear_keyboard();
+
 #    ifdef LED_POWER_EN_PIN
     if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN_PIN);
 #    endif
@@ -240,11 +249,16 @@ void suspend_wakeup_init_kb(void) {
 }
 
 bool lpwr_is_allow_timeout_hook(void) {
+    // Don't allow LPWR deep sleep in wireless mode at all
+    // When master enters LPWR, it stops polling the slave entirely
+    // This means right-side keys can never wake the keyboard
+    // Both halves must stay awake enough to maintain split communication
     if (wireless_get_current_devs() == DEVS_USB) {
         return false;
     }
 
-    return true;
+    // Prevent deep sleep when wireless - use lighter sleep modes only
+    return false;
 }
 
 void wireless_post_task(void) {
@@ -1456,6 +1470,10 @@ void lpwr_wakeup_hook(void) {
 #ifdef WIRELESS_ENABLE
     hs_mode_scan(false, confinfo.devs, confinfo.last_btdevs);
 #endif
+
+    // Delay to ensure split communication is ready before LED power changes
+    // Prevents RGB flickering on slave half during wake from deep sleep
+    wait_ms(50);
 
     if (rgb_matrix_get_val() != 0) {
         gpio_write_pin_high(LED_POWER_EN_PIN);

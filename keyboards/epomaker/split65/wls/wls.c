@@ -10,10 +10,10 @@ bool hs_modeio_detection(bool update, uint8_t *mode, uint8_t lsat_btdev) {
     }
     scan_timer = timer_read32();
 #if defined(HS_BT_DEF_PIN) && defined(HS_2G4_DEF_PIN)
-    uint8_t now_mode         = 0x00;
-    uint8_t hs_mode          = 0x00;
+    uint8_t        now_mode  = 0x00;
+    uint8_t        hs_mode   = 0x00;
     static uint8_t last_mode = 0x00;
-    bool sw_mode             = false;
+    bool           sw_mode   = false;
     now_mode                 = (HS_GET_MODE_PIN(HS_USB_PIN_STATE) ? 3 : (HS_GET_MODE_PIN(HS_BT_PIN_STATE) ? 1 : ((HS_GET_MODE_PIN(HS_2G4_PIN_STATE) ? 2 : 0))));
     hs_mode                  = (*mode >= DEVS_BT1 && *mode <= DEVS_BT5) ? 1 : ((*mode == DEVS_2G4) ? 2 : ((*mode == DEVS_USB) ? 3 : 0));
     sw_mode                  = ((update || (last_mode == now_mode)) && (hs_mode != now_mode)) ? true : false;
@@ -34,8 +34,7 @@ bool hs_modeio_detection(bool update, uint8_t *mode, uint8_t lsat_btdev) {
             break;
         case 3:
             *mode = hs_usb;
-            if (sw_mode)
-                wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
+            if (sw_mode) wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
 
             break;
         default:
@@ -57,9 +56,7 @@ bool hs_modeio_detection(bool update, uint8_t *mode, uint8_t lsat_btdev) {
 static uint32_t hs_linker_rgb_timer = 0x00;
 
 bool hs_mode_scan(bool update, uint8_t moude, uint8_t lsat_btdev) {
-
     if (hs_modeio_detection(update, &moude, lsat_btdev)) {
-
         return true;
     }
     hs_rgb_blink_hook();
@@ -116,7 +113,6 @@ bool hs_rgb_blink_hook() {
 }
 
 void lpwr_exti_init_hook(void) {
-
 #ifdef HS_BT_DEF_PIN
     setPinInputHigh(HS_BT_DEF_PIN);
     waitInputPinDelay();
@@ -161,16 +157,15 @@ void palcallback_cb(uint8_t line) {
         } break;
 #endif
         default: {
-
         } break;
     }
 }
 
 void lpwr_stop_hook_pre(void) {
-
     gpio_write_pin_low(LED_POWER_EN_PIN);
-    gpio_write_pin_low(A9);
- 
+    // Don't power down A9 (SERIAL_USART_TX) - breaks split communication!
+    // Slave needs TX powered to communicate after master wakes
+    // gpio_write_pin_low(A9);
 
     if (lower_sleep) {
         md_send_devctrl(MD_SND_CMD_DEVCTRL_USB);
