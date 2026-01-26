@@ -20,8 +20,6 @@
         }
     },
     "features": {
-        "command": false,
-        "console": false,
         "deferred_exec": true,
         "encoder": true,
         "extrakey": true,
@@ -114,11 +112,6 @@
             "starlight_dual_hue": true,
             "starlight_dual_sat": true,
             "riverflow": true
-        },
-        "default": {
-            "animation": "cycle_left_right",
-            "speed": 135,
-            "val": 150
         },
         "driver": "ws2812",
         "layout": [

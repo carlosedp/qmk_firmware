@@ -34,7 +34,7 @@ To reset **both sides** of the keyboard into bootloader mode, do the following:
 * Remove both the Space keycap and switch. Insert a tweezer or paper clip shorting the two holes beside the central switch hole while connecting the USB cable to the right half. The DFU pads are behind the switch position.
 * After flashing this firmware, you can do this by holding the "7" key while plugging the USB cable instead of shorting the holes. Changing the switch to the down position is still required.
 * **NOTE**: Don't forget making switch back up! It won't work unless the switch is in the up position.
-  ![Howto](https://github.com/gwangyi/Split65/raw/main/howto.jpg)
+  ![Howto](./howto.jpg)
 
 See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools) and the [make instructions](https://docs.qmk.fm/#/getting_started_make_guide) for more information. Brand new to QMK? Start with our [Complete Newbs Guide](https://docs.qmk.fm/#/newbs).
 
@@ -44,18 +44,19 @@ This firmware is configured for **maximum battery life** in wireless mode using 
 
 ### Current Behavior (Default - Deep Sleep Enabled)
 
-- ⚠️ **Only the left half can wake the keyboard** from deep sleep
-- ✅ **Maximum battery life**: Months of standby time
-- ✅ RGB turns off after 2 minutes (`RGB_MATRIX_TIMEOUT`)
-- ✅ Keyboard enters deep sleep (LPWR) after 10 minutes (`LPWR_TIMEOUT`)
-- ✅ Bluetooth module disconnects after 30 minutes of inactivity
-- ✅ Minimal power consumption in deep sleep mode
+* ⚠️ **Only the left half can wake the keyboard** from deep sleep
+* ✅ **Maximum battery life**: Months of standby time
+* ✅ RGB turns off after 2 minutes (`RGB_MATRIX_TIMEOUT`)
+* ✅ Keyboard enters deep sleep (LPWR) after 10 minutes (`LPWR_TIMEOUT`)
+* ✅ Bluetooth module disconnects after 30 minutes of inactivity
+* ✅ Minimal power consumption in deep sleep mode
 
 **Important Notes:**
-- After waking from deep sleep, both halves work normally. You just need to press a left-side key first to wake the keyboard.
-- **The Bluetooth connection typically stays active** even after the MCU enters deep sleep. This is normal - the wireless module firmware handles BT independently.
-- Battery savings come from the MCU being in LPWR deep sleep, not from BT disconnecting.
-- **To verify deep sleep is working:** After 10 minutes, press a **right-side key** - if it doesn't wake the keyboard, deep sleep is active ✅. Then press a left-side key to wake.
+
+* After waking from deep sleep, both halves work normally. You just need to press a left-side key first to wake the keyboard.
+* **The Bluetooth connection typically stays active** even after the MCU enters deep sleep. This is normal - the wireless module firmware handles BT independently.
+* Battery savings come from the MCU being in LPWR deep sleep, not from BT disconnecting.
+* **To verify deep sleep is working:** After 10 minutes, press a **right-side key** - if it doesn't wake the keyboard, deep sleep is active ✅. Then press a left-side key to wake.
 
 ### Enabling Both-Halves Wake (Reduced Battery Life)
 
@@ -67,13 +68,13 @@ If you need **both left and right halves to wake the keyboard** and don't mind s
 bool lpwr_is_allow_timeout_hook(void) {
     // Enable LPWR deep sleep in wireless mode for maximum battery life
     // Trade-off: Only the left half can wake the keyboard from deep sleep
-    // 
+    //
     // When master enters LPWR, it stops polling the slave to save power
     // This means right-side keys cannot wake the keyboard
     //
     // To allow both halves to wake (at cost of battery life):
     // Change the return value below from true to false
-    
+
     // In USB mode, don't use LPWR - USB host handles power management
     if (wireless_get_current_devs() == DEVS_USB) {
         return false;
