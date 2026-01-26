@@ -9,8 +9,13 @@
 #    include "uart.h"
 #endif
 
-static ioline_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
-static ioline_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
+/*
+ * Removed [MATRIX_ROWS] and [MATRIX_COLS] to fix sleep mode
+ * Array was being padded with invalid pin values when MATRIX_ROW_PINS
+ * had fewer elements than MATRIX_ROWS (split keyboards)
+ */
+static ioline_t row_pins[] = MATRIX_ROW_PINS;
+static ioline_t col_pins[] = MATRIX_COL_PINS;
 
 #if PAL_USE_CALLBACKS != TRUE
 #    error PAL_USE_CALLBACKS must be set to TRUE!
@@ -55,7 +60,6 @@ void palcallback(void *arg) {
 }
 
 void pal_events_init(void) {
-
     for (uint8_t i = 0; i < 16; i++) {
         _pal_events[i].cb  = palcallback;
         _pal_events[i].arg = (void *)(uint32_t)i;
@@ -66,7 +70,6 @@ void lpwr_exti_init_hook(void) __attribute__((weak));
 void lpwr_exti_init_hook(void) {}
 
 void lpwr_exti_init(void) {
-
     pal_events_init();
 
 #if DIODE_DIRECTION == ROW2COL
@@ -117,7 +120,6 @@ void lpwr_clock_enable_user(void) __attribute__((weak));
 void lpwr_clock_enable_user(void) {}
 
 void lpwr_clock_enable(void) {
-
     __early_init();
 
     PWR->ANAKEY1 = 0x03;
@@ -140,21 +142,21 @@ void lpwr_clock_enable(void) {
     RCC->USBFIFOCLKENR = RCC_USBFIFOCLKENR_CLKEN;
 
     /* Configure and enable USBCLK */
-#        if (WB32_USBPRE == WB32_USBPRE_DIV1P5)
+#if (WB32_USBPRE == WB32_USBPRE_DIV1P5)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= RCC_USBPRE_RATIO_1_5;
     RCC->USBPRE |= RCC_USBPRE_DIVEN;
-#        elif (WB32_USBPRE == WB32_USBPRE_DIV1)
+#elif (WB32_USBPRE == WB32_USBPRE_DIV1)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= 0x00;
-#        elif (WB32_USBPRE == WB32_USBPRE_DIV2)
+#elif (WB32_USBPRE == WB32_USBPRE_DIV2)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= RCC_USBPRE_RATIO_2;
     RCC->USBPRE |= RCC_USBPRE_DIVEN;
-#        elif (WB32_USBPRE == WB32_USBPRE_DIV3)
+#elif (WB32_USBPRE == WB32_USBPRE_DIV3)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= RCC_USBPRE_RATIO_3;
@@ -192,7 +194,6 @@ void lpwr_clock_enable(void) {
 }
 
 void wb32_stop_mode(void) {
-
     SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 
     /* Prevent the chip from being unable to enter stop mode due to pending interrupts */
@@ -200,8 +201,13 @@ void wb32_stop_mode(void) {
     EXTI->PR = 0x7FFFF;
     for (uint8_t i = 0; i < 8; i++) {
         for (uint8_t j = 0; j < 32; j++) {
-            if (NVIC->ISPR[i] & (0x01UL < j)) {
-                NVIC->ICPR[i] = (0x01UL < j);
+            /*
+             * Fixed bit shift operator: << instead of <
+             * Prevents instant/false wakeups from improperly cleared interrupts
+             */
+            uint32_t mask = (0x01UL << j);
+            if (NVIC->ISPR[i] & mask) {
+                NVIC->ICPR[i] = mask; /* Properly clear pending IRQ */
             }
         }
     }
@@ -232,6 +238,5 @@ void wb32_stop_mode(void) {
 }
 
 void mcu_stop_mode(void) {
-
     wb32_stop_mode();
 }
