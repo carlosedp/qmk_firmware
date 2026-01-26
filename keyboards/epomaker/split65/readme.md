@@ -40,59 +40,68 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 
 ## Power Management & Battery Life
 
-This firmware includes fixes for wireless split keyboard operation. By default, **deep sleep (LPWR) is disabled in wireless mode** to ensure both keyboard halves can wake the keyboard.
+This firmware is configured for **maximum battery life** in wireless mode using deep sleep (LPWR). By default, **only the left half can wake the keyboard** from deep sleep.
 
-### Current Behavior (Default)
+### Current Behavior (Default - Deep Sleep Enabled)
 
-- ✅ **Both left and right halves can wake the keyboard**
+- ⚠️ **Only the left half can wake the keyboard** from deep sleep
+- ✅ **Maximum battery life**: Months of standby time
 - ✅ RGB turns off after 2 minutes (`RGB_MATRIX_TIMEOUT`)
-- ✅ Keyboard enters light sleep mode (PRESLEEP/suspend)
-- ✅ Split communication remains active
-- ⚠️ **Battery life**: Weeks to a month of standby (depending on usage)
+- ✅ Keyboard enters deep sleep (LPWR) after 10 minutes (`LPWR_TIMEOUT`)
+- ✅ Bluetooth module disconnects after 30 minutes of inactivity
+- ✅ Minimal power consumption in deep sleep mode
 
-### Re-enabling Deep Sleep (LPWR Mode)
+**Important Notes:**
+- After waking from deep sleep, both halves work normally. You just need to press a left-side key first to wake the keyboard.
+- **The Bluetooth connection typically stays active** even after the MCU enters deep sleep. This is normal - the wireless module firmware handles BT independently.
+- Battery savings come from the MCU being in LPWR deep sleep, not from BT disconnecting.
+- **To verify deep sleep is working:** After 10 minutes, press a **right-side key** - if it doesn't wake the keyboard, deep sleep is active ✅. Then press a left-side key to wake.
 
-If you prefer **maximum battery life** (potentially months of standby) and don't mind that **only the left half can wake the keyboard**, you can re-enable deep sleep:
+### Enabling Both-Halves Wake (Reduced Battery Life)
 
-**In `keyboards/epomaker/split65/split65.c`, change:**
+If you need **both left and right halves to wake the keyboard** and don't mind shorter battery life (weeks to a month), you can disable deep sleep:
+
+**In `keyboards/epomaker/split65/split65.c`, find:**
 
 ```c
 bool lpwr_is_allow_timeout_hook(void) {
-    // Don't allow LPWR deep sleep in wireless mode at all
-    // When master enters LPWR, it stops polling the slave entirely
-    // This means right-side keys can never wake the keyboard
-    // Both halves must stay awake enough to maintain split communication
+    // Enable LPWR deep sleep in wireless mode for maximum battery life
+    // Trade-off: Only the left half can wake the keyboard from deep sleep
+    // 
+    // When master enters LPWR, it stops polling the slave to save power
+    // This means right-side keys cannot wake the keyboard
+    //
+    // To allow both halves to wake (at cost of battery life):
+    // Change the return value below from true to false
+    
+    // In USB mode, don't use LPWR - USB host handles power management
     if (wireless_get_current_devs() == DEVS_USB) {
         return false;
     }
 
-    // Prevent deep sleep when wireless - use lighter sleep modes only
-    return false;
+    // Enable deep sleep in wireless mode - left-side wake only
+    // Change to 'return false;' for both-halves wake with reduced battery life
+    return true;
 }
 ```
 
-**To:**
+**Change the last line to:**
 
 ```c
-bool lpwr_is_allow_timeout_hook(void) {
-    if (wireless_get_current_devs() == DEVS_USB) {
-        return false;
-    }
-
-    return true;  // Allow deep sleep - only left half will wake keyboard
+    return false;  // Disable deep sleep - both halves can wake keyboard
 }
 ```
 
-**Trade-offs with Deep Sleep Enabled:**
+**Benefits with Deep Sleep Disabled:**
 
-* ❌ **Right half CANNOT wake the keyboard** - only left-side keys work after sleep
-* ❌ Must press a key on the LEFT half to wake, then right side works
-* ✅ **Maximum battery life** - months of standby time
-* ✅ Deep LPWR mode stops almost all power consumption
+* ✅ **Both left and right halves can wake the keyboard**
+* ✅ Split communication remains active during sleep
+* ⚠️ **Battery life**: Weeks to a month of standby (reduced compared to deep sleep)
+* ⚠️ Higher idle power consumption
 
 **Why this limitation exists:**
 
-In deep sleep (LPWR), the master (left) half completely stops polling the slave (right) half to save power. When the master is in LPWR:
+In deep sleep (LPWR), the master (left) half completely stops polling the slave (right) half to save maximum power. When the master is in LPWR:
 
 * Split UART communication is suspended
 * The master cannot detect keypresses from the slave

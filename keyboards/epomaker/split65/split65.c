@@ -249,16 +249,23 @@ void suspend_wakeup_init_kb(void) {
 }
 
 bool lpwr_is_allow_timeout_hook(void) {
-    // Don't allow LPWR deep sleep in wireless mode at all
-    // When master enters LPWR, it stops polling the slave entirely
-    // This means right-side keys can never wake the keyboard
-    // Both halves must stay awake enough to maintain split communication
+    // Enable LPWR deep sleep in wireless mode for maximum battery life
+    // Trade-off: Only the left half can wake the keyboard from deep sleep
+    //
+    // When master enters LPWR, it stops polling the slave to save power
+    // This means right-side keys cannot wake the keyboard
+    //
+    // To allow both halves to wake (at cost of battery life):
+    // Change the return value below from true to false
+
+    // In USB mode, don't use LPWR - USB host handles power management
     if (wireless_get_current_devs() == DEVS_USB) {
         return false;
     }
 
-    // Prevent deep sleep when wireless - use lighter sleep modes only
-    return false;
+    // Enable deep sleep in wireless mode - left-side wake only
+    // Change to 'return false;' for both-halves wake with reduced battery life
+    return true;
 }
 
 void wireless_post_task(void) {
