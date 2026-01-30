@@ -23,6 +23,7 @@ They keyboards that have been incorporated are:
 - Akko Monsgeek M1 V5
 - Evoworks EVO80
 - Epomaker Galaxy 68
+- Epomaker Split 65
 
 These are keyboards I own or have been tested and reported back to work. There might be differences to the official firmware in keymaps, sleep times, battery consumption and other factors but the main features should work as the original (wireless, LEDs, etc).
 
