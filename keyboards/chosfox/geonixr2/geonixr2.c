@@ -64,33 +64,133 @@ led_config_t g_led_config = {
 // clang-format on
 
 // ============================================================================
+// RM_TOGG "fake off" — keep RGB matrix enabled for indicator callbacks
+// ============================================================================
+//
+// QMK skips rgb_matrix_indicators_advanced_kb() when effect == 0, which
+// happens when rgb_matrix_config.enable is false (i.e. after RM_TOGG off).
+// The stock firmware's blob drives indicators independently, but the
+// open-source library relies on QMK's callback.
+//
+// Fix: intercept RM_TOGG to toggle a flag instead of truly disabling RGB.
+// When the flag is set, the indicator callback blacks out all LEDs before
+// the library draws its indicators.  The effect is also switched to
+// RGB_MATRIX_SOLID_COLOR (the cheapest possible mode) to minimize CPU
+// and DMA overhead while the LEDs appear off.  The previous effect mode
+// is saved and restored when the user toggles back on.  On boot, if
+// EEPROM already has RGB disabled, force-enable and start in fake-off.
+//
+// Both the fake-off flag and saved mode are persisted in QMK's KB-level
+// eeconfig datablock (EECONFIG_KB_DATA_SIZE = 1) so the state survives
+// power cycles and sleep/wake.
+
+// Persisted via QMK's KB-level eeconfig datablock (EECONFIG_KB_DATA_SIZE = 1).
+typedef union {
+    uint8_t raw;
+    struct {
+        bool    rgb_effects_off : 1;
+        uint8_t rgb_saved_mode  : 7;  // 0-127 covers all RGB_MATRIX_* modes
+    };
+} kb_config_t;
+
+static kb_config_t kb_config;
+
+// ============================================================================
 // QMK Callback Functions - Delegate to common implementations
 // ============================================================================
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
-    return kb_rgb_matrix_indicators_common(led_min, led_max);
+    // In fake-off mode: black out every LED the effect just painted,
+    // then let the library draw indicators on top.
+    if (kb_config.rgb_effects_off) {
+        for (uint8_t i = led_min; i < led_max; i++) {
+            kb_led_off(i);
+        }
+    }
+    if (!kb_rgb_matrix_indicators_common(led_min, led_max)) {
+        return false;
+    }
+    return rgb_matrix_indicators_advanced_user(led_min, led_max);
 }
 
 void notify_usb_device_state_change_kb(struct usb_device_state usb_device_state) {
     kb_notify_usb_device_state_change(usb_device_state);
+    notify_usb_device_state_change_user(usb_device_state);
 }
 
 bool led_update_kb(led_t led_state) {
-    return kb_led_update(led_state);
+    if (!kb_led_update(led_state)) {
+        return false;
+    }
+    return led_update_user(led_state);
 }
 
 void housekeeping_task_kb(void) {
     kb_housekeeping_task();
+    housekeeping_task_user();
 }
 
 void board_init(void) {
     kb_board_init();
 }
 
+void eeconfig_init_kb(void) {
+    // Called on EEPROM reset (EE_CLR).  Zero the KB datablock so RGB
+    // starts with effects ON and no stale saved mode.
+    kb_config.raw = 0;
+    eeconfig_update_kb_datablock(&kb_config, 0, sizeof(kb_config));
+    eeconfig_init_user();
+}
+
 void keyboard_post_init_kb(void) {
     kb_keyboard_post_init();
+
+    // Restore persisted fake-off state from KB datablock.
+    eeconfig_read_kb_datablock(&kb_config, 0, sizeof(kb_config));
+
+    if (kb_config.rgb_effects_off) {
+        // User toggled LEDs off before last power-down — resume fake-off.
+        if (!rgb_matrix_is_enabled()) {
+            rgb_matrix_enable_noeeprom();
+        }
+        rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+    } else if (!rgb_matrix_is_enabled()) {
+        // Legacy: EEPROM has RGB truly disabled (from before fake-off fix).
+        // Force-enable so indicators work, and start in fake-off.
+        rgb_matrix_enable_noeeprom();
+        kb_config.rgb_effects_off = true;
+        kb_config.rgb_saved_mode  = RGB_MATRIX_SOLID_COLOR;
+        rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+        eeconfig_update_kb_datablock(&kb_config, 0, sizeof(kb_config));
+    }
+
+    keyboard_post_init_user();
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    return kb_process_record_common(keycode, record);
+    // Intercept RM_TOGG: toggle fake-off flag instead of truly disabling
+    // RGB, so the indicator callback keeps firing.
+    // IMPORTANT: must block BOTH press AND release — QMK's process_rgb_matrix
+    // triggers on key release by default (not press), so letting the release
+    // through would call rgb_matrix_toggle() and truly disable the matrix.
+    if (keycode == RM_TOGG) {
+        if (record->event.pressed) {
+            kb_config.rgb_effects_off = !kb_config.rgb_effects_off;
+            if (kb_config.rgb_effects_off) {
+                // Save current mode, switch to cheapest effect to reduce
+                // CPU and DMA overhead while LEDs appear off.
+                kb_config.rgb_saved_mode = rgb_matrix_get_mode();
+                rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+            } else {
+                // Restore the user's previous effect mode.
+                rgb_matrix_mode_noeeprom(kb_config.rgb_saved_mode);
+            }
+            eeconfig_update_kb_datablock(&kb_config, 0, sizeof(kb_config));
+        }
+        return false;  // Consumed — don't pass to library or QMK
+    }
+    if (!kb_process_record_common(keycode, record)) {
+        return false;
+    }
+    return process_record_user(keycode, record);
 }
