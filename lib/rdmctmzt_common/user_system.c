@@ -117,8 +117,10 @@ void Init_Gpio_Infomation(void) {
     gpio_set_pin_input(ES_USB_POWER_IO);
 
     // Mode switch pins (from original working implementation)
+#if HAS_MODE_SWITCH
     gpio_set_pin_input_high(MODE_2P4G_IO); // 2.4G mode switch
     gpio_set_pin_input_high(MODE_BLE_IO);  // BLE mode switch
+#endif
 
     md_gpio_inittypedef gpiox;
 
@@ -405,7 +407,7 @@ void es_chibios_user_idle_loop_hook(void) {
                 }
 
                 for (uint8_t k = 0; k < MATRIX_COLS; k++) {
-                    gpio_write_pin_high(User_Pin_Tab_Col[j]);
+                    gpio_write_pin_high(User_Pin_Tab_Col[k]);
                 }
 
                 delay = 50;
@@ -448,6 +450,7 @@ void es_chibios_user_idle_loop_hook(void) {
 }
 
 // Mode switch detection implementation
+#if HAS_MODE_SWITCH
 uint8_t Read_Mode_Switch_Position(void) {
     bool mode_2p4g = gpio_read_pin(MODE_2P4G_IO); // 2.4G switch
     bool mode_ble  = gpio_read_pin(MODE_BLE_IO);  // BLE switch
@@ -578,3 +581,12 @@ void Debug_Mode_Switch_Position(void) {
     // Format: 2P4G:x BLE:x POS:x MODE:x
     printf("2P4G:%d BLE:%d POS:%d MODE:%d\n", mode_2p4g, mode_ble, position, Keyboard_Info.Key_Mode);
 }
+
+#else /* !HAS_MODE_SWITCH */
+
+/* No physical mode switch — EEPROM-saved mode is trusted directly. */
+void Check_Mode_Switch_Changed(void) {}
+void Debug_Mode_Switch_Position(void) {}
+
+#endif /* HAS_MODE_SWITCH */
+

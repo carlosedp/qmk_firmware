@@ -56,10 +56,15 @@
 #define RGB_MATRIX_SLEEP
 
 // BLE configuration for GEONIXR2
-#define USER_BLE_ID (0X00A5) // GEONIXR2 BLE ID
-#define USER_BLE1_NAME "GEONIXR2-1"
-#define USER_BLE2_NAME "GEONIXR2-2"
-#define USER_BLE3_NAME "GEONIXR2-3"
+#define USER_BLE_ID (0x2052) // Geonix R2 BLE ID (matches vendor firmware)
+#define USER_BLE1_NAME "Geonix rev.2-1"
+#define USER_BLE2_NAME "Geonix rev.2-2"
+#define USER_BLE3_NAME "Geonix rev.2-3"
+
+// This board has no physical 3-position mode switch (USB/BLE/2.4G).
+// Without this, the library reads floating GPIO pins on every boot and
+// overrides the saved wireless mode back to USB.
+#define HAS_MODE_SWITCH 0
 
 // LED Index Definitions for keyboard_common library
 #define LED_CONNECTION_INDEX 11 // Connection type indicator (BLE/2.4G/USB)
@@ -70,4 +75,4 @@
 #define LED_BLE_2_INDEX 2       // 'W' key position
 #define LED_BLE_3_INDEX 3       // 'E' key position
 #define LED_2P4G_INDEX 4        // 'R' key position
-#define LED_USB_INDEX 5         // 'T' key position
+#define LED_USB_INDEX 0         // 'Tab' key position

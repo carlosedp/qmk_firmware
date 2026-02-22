@@ -98,7 +98,7 @@
             "riverflow": true
         }
     },
-    "processor": "FS026",
+    "processor": "cortex-m0",
     "bootloader": "custom",
     "layouts": {
         "LAYOUT_tkl_ansi": {
