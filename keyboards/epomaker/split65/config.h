@@ -14,6 +14,9 @@
 #define MATRIX_ROWS 12
 #define MATRIX_COLS 9
 
+// Make encoder use one detent per step instead of two
+#define ENCODER_RESOLUTION 2
+
 #define HS_RGB_INDICATOR_COUNT 99
 #define HS_RGB_BAT_COUNT 1
 
