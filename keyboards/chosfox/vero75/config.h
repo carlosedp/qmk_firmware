@@ -85,14 +85,17 @@
 // #define RGB_MATRIX_DEFAULT_SPD 128          // 设置 RGB 矩阵默认亮度值
 
 // BLE configuration
-#define USER_BLE_ID (0X00A5)
+#define USER_BLE_ID (0X307A)
 #define USER_BLE1_NAME "Chosfox Vero75 1"
 #define USER_BLE2_NAME "Chosfox Vero75 2"
 #define USER_BLE3_NAME "Chosfox Vero75 3"
 
+/* Battery LED count */
+#define BATTERY_LED_COUNT 10
+
 /* LED Index Definitions required by lib/rdmctmzt_common/keyboard_common.h */
 #define LOGO_LED_ENABLE 1       // Enable Logo LED functionality
-#define LED_LOGO_INDEX 84       // Logo LED starting index (68-99 are logo/bottom LEDs)
+#define LED_LOGO_INDEX 84       // Logo LED starting index (84-90 are logo/bottom LEDs)
 #define LOGO_LED_COUNT 7       // Number of logo/bottom LEDs
 #define LED_CONNECTION_INDEX 83 // Connection type indicator (BLE/2.4G/USB)
 #define LED_CAP_INDEX 46        // Caps Lock indicator
