@@ -11,8 +11,6 @@
 
 /*
  * Removed [MATRIX_ROWS] and [MATRIX_COLS] to fix sleep mode
- * Array was being padded with invalid pin values when MATRIX_ROW_PINS
- * had fewer elements than MATRIX_ROWS (split keyboards)
  */
 static ioline_t row_pins[] = MATRIX_ROW_PINS;
 static ioline_t col_pins[] = MATRIX_COL_PINS;
@@ -44,7 +42,8 @@ void palcallback(void *arg) {
 
     switch (line) {
 #ifndef LPWR_UART_WAKEUP_DISABLE
-        case PAL_PAD(UART_RX_PIN): {
+        case PAL_PAD(UART_RX_PIN):
+        case PAL_PAD(SERIAL_USART_RX_PIN): {
             lpwr_set_sleep_wakeupcd(LPWR_WAKEUP_UART);
         } break;
 #endif
@@ -108,6 +107,13 @@ void lpwr_exti_init(void) {
     setPinInput(UART_RX_PIN);
     waitInputPinDelay();
     palEnableLineEvent(UART_RX_PIN, PAL_EVENT_MODE_BOTH_EDGES);
+
+    // Master needs to wake when slave sends data
+    if (is_keyboard_master()) {
+        setPinInputHigh(SERIAL_USART_RX_PIN);
+        waitInputPinDelay();
+        palEnableLineEvent(SERIAL_USART_RX_PIN, PAL_EVENT_MODE_BOTH_EDGES);
+    }
 #endif
 
     lpwr_exti_init_hook();
@@ -187,7 +193,13 @@ void lpwr_clock_enable(void) {
 #endif
 
 #ifndef LPWR_UART_WAKEUP_DISABLE
+    // Restore wireless module UART pins
     palSetLineMode(UART_RX_PIN, PAL_MODE_ALTERNATE(UART_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+    palSetLineMode(UART_TX_PIN, PAL_MODE_ALTERNATE(UART_TX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+
+    // Restore split keyboard SERIAL_USART pins
+    palSetLineMode(SERIAL_USART_RX_PIN, PAL_MODE_ALTERNATE(SERIAL_USART_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+    palSetLineMode(SERIAL_USART_TX_PIN, PAL_MODE_ALTERNATE(SERIAL_USART_TX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
 #endif
 
     lpwr_clock_enable_user();
@@ -202,8 +214,7 @@ void wb32_stop_mode(void) {
     for (uint8_t i = 0; i < 8; i++) {
         for (uint8_t j = 0; j < 32; j++) {
             /*
-             * Fixed bit shift operator: << instead of <
-             * Prevents instant/false wakeups from improperly cleared interrupts
+             * Recommended by AI to prevent instant/false wakeups
              */
             uint32_t mask = (0x01UL << j);
             if (NVIC->ISPR[i] & mask) {
