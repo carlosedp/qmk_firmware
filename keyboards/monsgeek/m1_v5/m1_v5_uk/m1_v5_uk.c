@@ -196,6 +196,7 @@ void suspend_wakeup_init_kb(void) {
     if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN_PIN);
 #    endif
 
+    clear_keyboard(); // Clear keyboard state to prevent stuck modifiers after waking
     wireless_devs_change(wireless_get_current_devs(), wireless_get_current_devs(), false);
     suspend_wakeup_init_user();
     hs_rgb_blink_set_timer(timer_read32());
