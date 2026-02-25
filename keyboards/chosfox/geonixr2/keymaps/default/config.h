@@ -1,4 +1,7 @@
-/* Copyright 2020 tominabox1
+/* Copyright 2025 Carlos Eduardo de Paula <carlosedp@gmail.com>
+ * Copyright 2025 EPOMAKER <https://github.com/Epomaker>
+ * Copyright 2023 LiWenLiu <https://github.com/LiuLiuQMK>
+ * Copyright 2021 QMK <https://github.com/qmk/qmk_firmware>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,6 +16,4 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#pragma once
-
-#define COMBO_TERM 30
+// Custom configuration

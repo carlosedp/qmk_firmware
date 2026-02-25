@@ -524,6 +524,7 @@ void Init_Keyboard_Infomation(void) {
 #endif
     }
 
+#if HAS_MODE_SWITCH
     // Read current mode switch position and set initial mode accordingly
     Current_Mode_Switch_Position = Read_Mode_Switch_Position();
     Last_Mode_Switch_Position    = Current_Mode_Switch_Position;
@@ -544,6 +545,7 @@ void Init_Keyboard_Infomation(void) {
             }
             break;
     }
+#endif
 }
 
 void es_change_qmk_nkro_mode_enable(void) {

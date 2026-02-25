@@ -186,6 +186,15 @@ typedef enum {
 #    define LED_CONNECTION_INDICATOR_ENABLE 0
 #endif
 
+// Physical Mode Switch
+// When enabled, the keyboard reads GPIO pins (MODE_2P4G_IO, MODE_BLE_IO) to
+// detect a physical 3-position mode switch and overrides the EEPROM-saved
+// wireless mode on boot.  Set to 0 in keyboard's config.h for boards without
+// a physical switch — the EEPROM-saved mode will be trusted directly.
+#ifndef HAS_MODE_SWITCH
+#    define HAS_MODE_SWITCH 1
+#endif
+
 #define KC_K29 KC_BACKSLASH
 #define KC_K42 KC_NONUS_HASH
 #define KC_K45 KC_NONUS_BACKSLASH

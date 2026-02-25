@@ -24,6 +24,9 @@ They keyboards that have been incorporated are:
 - Evoworks EVO80
 - Epomaker Galaxy 68
 - Epomaker Split 65
+- Chosfox Geonix R2
+- Cidoo QK61 v2
+- Chosfox Vero75
 
 These are keyboards I own or have been tested and reported back to work. There might be differences to the official firmware in keymaps, sleep times, battery consumption and other factors but the main features should work as the original (wireless, LEDs, etc).
 
@@ -35,7 +38,6 @@ These are keyboards I own or have been tested and reported back to work. There m
 - ~Epomaker Galaxy100 (Removed on baf8d85bb9 due to issues)~
 - Epomaker Luma84
 - Epomaker Tide49
-- Chosfox Geonix R2 (still on a PR)
 
 These untested keyboards compile but haven't been tested for all it's functionality so wireless, backlights, RGB or other functions might not work as expected or as the official firmware.
 
