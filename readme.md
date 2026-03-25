@@ -40,6 +40,8 @@ These are keyboards I own or have been tested and reported back to work. There m
 
 These untested keyboards compile but haven't been tested for all it's functionality so wireless, backlights, RGB or other functions might not work as expected or as the official firmware.
 
+There are factory firmware files for some of these keyboards at https://github.com/carlosedp/qmk_firmware/releases/tag/0.31.2. Use them in case you need to revert to the original.
+
 I welcome testers and PRs to have a broad open-source support of them.
 
 ## Documentation
