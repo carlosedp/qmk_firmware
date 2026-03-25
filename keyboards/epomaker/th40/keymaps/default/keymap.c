@@ -37,12 +37,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,   KC_1,    KC_2,     KC_3,    KC_4,    KC_5,     KC_6,    KC_7,    KC_8,    KC_9,     KC_0,     KC_BSLS,
         KC_CAPS,  MD_BLE1, MD_BLE2,  MD_BLE3, MD_24G,  MD_USB,   RM_VALU, RM_SATD, KC_MINS, KC_EQL,             RM_TOGG,
         KC_LSFT,  KC_GRV,  RM_NEXT,  RM_SPDD, RM_SPDU, KC_V,     RM_HUED, RM_VALD, RM_HUEU, KC_COMM,  KC_UP,    MW_CH,
-        EE_CLR,   QK_WLO,  KC_LALT,                    QK_BAT,   KC_NO,   KC_SPC,           KC_LEFT,  KC_DOWN,  DBG_SW
+        EE_CLR,   QK_WLO,  KC_LALT,                    QK_BAT,   KC_NO,   KC_SPC,           KC_LEFT,  KC_DOWN,  KC_RIGHT
     ),
     [3] = LAYOUT_tkl_ansi(
         KC_ESC,   KC_1,    KC_2,     KC_3,    KC_4,    KC_5,     KC_6,    KC_7,    KC_8,    KC_9,     KC_0,     KC_BSLS,
         KC_CAPS,  MD_BLE1, MD_BLE2,  MD_BLE3, MD_24G,  MD_USB,   RM_VALU, RM_SATD, KC_MINS, KC_EQL,             RM_TOGG,
         KC_LSFT,  KC_GRV,  RM_NEXT,  RM_SPDD, RM_SPDU, KC_V,     RM_HUED, RM_VALD, RM_HUEU, KC_COMM,  KC_UP,    MW_CH,
-        EE_CLR,   KC_LALT, KC_LGUI,                    QK_BAT,   KC_NO,   KC_SPC,           KC_LEFT,  KC_DOWN,  DBG_SW
+        EE_CLR,   KC_LALT, KC_LGUI,                    QK_BAT,   KC_NO,   KC_SPC,           KC_LEFT,  KC_DOWN,  KC_RIGHT
     )
 };
