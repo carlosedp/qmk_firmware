@@ -1,8 +1,5 @@
 # Rules for Epomaker Galaxy68
 
-# Disable header guard warning for library files we can't modify
-EXTRAFLAGS += -Wno-error=header-guard
-
 # MCU configuration
 MCU_FAMILY = ES32
 MCU_SERIES = FS026
@@ -44,7 +41,7 @@ DEBOUNCE_TYPE = asym_eager_defer_pk
 # Explicitly define RGB_MATRIX_ENABLE for VIA compatibility
 OPT_DEFS += -DRGB_MATRIX_ENABLE
 
-# Include common library (replaces rdr_lib if present)
+# Include common library (replaces rdr_lib)
 VPATH += lib/rdmctmzt_common
 EXTRAINCDIRS += $(TOP_DIR)/lib/rdmctmzt_common
 SRC += rdmctmzt_common.c \
@@ -54,9 +51,9 @@ SRC += rdmctmzt_common.c \
 	user_eeprom.c \
 	user_emi.c \
 	user_led_custom.c \
-	user_logo_led.c \
 	user_spi.c \
-	user_system.c
+	user_system.c \
+	user_logo_led.c
 
 # Include dynamic keymap support
 SRC += quantum/dynamic_keymap.c

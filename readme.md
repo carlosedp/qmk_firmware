@@ -22,7 +22,7 @@ They keyboards that have been incorporated are:
 - Epomaker Luma40
 - Akko Monsgeek M1 V5
 - Evoworks EVO80
-- Epomaker Galaxy 68
+- Epomaker Galaxy68
 - Chosfox Geonix R2
 - Cidoo QK61 v2
 - Chosfox Vero75
