@@ -75,6 +75,12 @@ CFLAGS += -Wstrict-prototypes
 ifneq ($(strip $(ALLOW_WARNINGS)), yes)
     CFLAGS += -Werror
 endif
+# GCC 15+ promotes header-guard mismatches to errors; suppress to allow
+# upstream library headers with mismatched #ifndef/#define guards to build.
+GCC_MAJOR := $(shell $(CC) -dumpversion 2>/dev/null | cut -d. -f1)
+ifeq ($(shell [ "$(GCC_MAJOR)" -ge 15 ] 2>/dev/null && echo yes),yes)
+    CFLAGS += -Wno-header-guard
+endif
 CFLAGS += $(CSTANDARD)
 
 # This fixes lots of keyboards linking errors but SHOULDN'T BE A FINAL SOLUTION
