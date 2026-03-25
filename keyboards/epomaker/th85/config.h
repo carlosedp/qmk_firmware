@@ -29,7 +29,7 @@
  */
 
 #define MATRIX_UNSELECT_DRIVE_HIGH
-#define CORTEX_ENABLE_WFI_IDLE          FALSE
+#define CORTEX_ENABLE_WFI_IDLE FALSE
 
 /* Ensure we jump to bootloader if the RESET keycode was pressed */
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
@@ -37,7 +37,7 @@
 #define DEBOUNCE 5
 
 #ifndef NOP_FUDGE
-#define NOP_FUDGE 0.4
+#    define NOP_FUDGE 0.4
 #endif
 
 #define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 1151
@@ -67,9 +67,9 @@
 #define USER_BLE3_NAME "TH85-3"
 
 // Logo LED
-#define LOGO_LED_ENABLE 1       // Enable Logo LED functionality
-#define LED_LOGO_INDEX 84       // Logo LED starting index
-#define LOGO_LED_COUNT 46       // Number of logo LEDs
+#define LOGO_LED_ENABLE 1 // Enable Logo LED functionality
+#define LED_LOGO_INDEX 84 // Logo LED starting index
+#define LOGO_LED_COUNT 46 // Number of logo LEDs
 
 // LED Index Definitions for keyboard_common library
 #define LED_CONNECTION_INDEX 84 // Connection type indicator (underglow LED)

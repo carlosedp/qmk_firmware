@@ -16,6 +16,7 @@
 #include QMK_KEYBOARD_H
 #include "rdmctmzt_common.h"
 
+// clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT_tkl_ansi(
         KC_ESC,   KC_F1,      KC_F2,    KC_F3,    KC_F4,    KC_F5,        KC_F6,     KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   KC_DEL,   KC_PSCR,  KC_PAUS, KC_MUTE,
@@ -48,14 +49,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_CAPS,  KC_A,       KC_S,     KC_D,     KC_F,     KC_G,         KC_H,      KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,            QK_BAT,
         KC_LSFT,              KC_Z,     KC_X,     KC_C,     KC_V,         KC_B,      KC_N,     KC_M,     KC_COMM,  KC_DOT,   KC_SLSH,  KC_RSFT,            RM_VALU,
         KC_LCTL,  KC_LALT,    KC_LGUI,                      EE_CLR,                                      KC_RGUI,  KC_NO,    KC_RCTL,            RM_SPDD,  RM_VALD,  RM_SPDU
-    ) 
+    )
 };
+// clang-format on
 
 #if defined(ENCODER_MAP_ENABLE)
-const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
-    [0] = { ENCODER_CCW_CW(KC_AUDIO_VOL_DOWN, KC_AUDIO_VOL_UP) },
-    [1] = { ENCODER_CCW_CW(KC_AUDIO_VOL_DOWN, KC_AUDIO_VOL_UP) },
-    [2] = { ENCODER_CCW_CW(RM_SATD, RM_SATU) },
-    [3] = { ENCODER_CCW_CW(RM_SPDD, RM_SPDU) }
-};
+const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {[0] = {ENCODER_CCW_CW(KC_AUDIO_VOL_DOWN, KC_AUDIO_VOL_UP)}, [1] = {ENCODER_CCW_CW(KC_AUDIO_VOL_DOWN, KC_AUDIO_VOL_UP)}, [2] = {ENCODER_CCW_CW(RM_SATD, RM_SATU)}, [3] = {ENCODER_CCW_CW(RM_SPDD, RM_SPDU)}};
 #endif
