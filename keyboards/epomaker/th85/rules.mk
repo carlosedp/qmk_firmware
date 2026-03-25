@@ -40,7 +40,9 @@ SRC += rdmctmzt_common.c \
 	user_led_custom.c \
 	user_spi.c \
 	user_system.c \
-	user_logo_led.c
+	user_led_zone.c \
+	user_logo_led.c \
+	user_side_led.c
 
 # Include dynamic keymap support
 SRC += quantum/dynamic_keymap.c

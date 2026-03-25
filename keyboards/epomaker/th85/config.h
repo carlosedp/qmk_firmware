@@ -69,7 +69,12 @@
 // Logo LED
 #define LOGO_LED_ENABLE 1 // Enable Logo LED functionality
 #define LED_LOGO_INDEX 84 // Logo LED starting index
-#define LOGO_LED_COUNT 46 // Number of logo LEDs
+#define LOGO_LED_COUNT 8  // Number of logo LEDs
+
+// Side LED
+#define SIDE_LED_ENABLE 1 // Enable Side LED functionality
+#define LED_SIDE_INDEX 92 // Side LED starting index (after 84 key + 8 logo)
+#define SIDE_LED_COUNT 38 // Number of side LEDs
 
 // LED Index Definitions for keyboard_common library
 #define LED_CONNECTION_INDEX 84 // Connection type indicator (underglow LED)

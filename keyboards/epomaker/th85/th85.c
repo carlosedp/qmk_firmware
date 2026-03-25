@@ -90,5 +90,78 @@ void keyboard_post_init_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+#if LOGO_LED_ENABLE
+    process_logo_led_keycodes(keycode, record);
+#endif
+#if SIDE_LED_ENABLE
+    process_side_led_keycodes(keycode, record);
+#endif
     return kb_process_record_common(keycode, record);
 }
+
+#if defined(VIA_ENABLE) && (defined(LOGO_LED_ENABLE) || defined(SIDE_LED_ENABLE))
+// VIA custom channel IDs for Logo LED (channel 1) and Side LED (channel 4)
+enum via_logo_led_value {
+    id_logo_brightness   = 1,
+    id_logo_effect       = 2,
+    id_logo_effect_speed = 3,
+    id_logo_color        = 4,
+};
+
+void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
+    uint8_t *command_id = &(data[0]);
+    uint8_t *channel_id = &(data[1]);
+    uint8_t *value_id   = &(data[2]);
+    uint8_t *value_data = &(data[3]);
+
+#    if LOGO_LED_ENABLE
+    if (*channel_id == 1) {
+        if (*command_id == id_custom_set_value) {
+            switch (*value_id) {
+                case id_logo_brightness:
+                    Keyboard_Info.Logo_Brightness = value_data[0];
+                    Save_Flash_Set();
+                    break;
+                case id_logo_effect:
+                    Keyboard_Info.Logo_Mode = value_data[0];
+                    Save_Flash_Set();
+                    break;
+                case id_logo_effect_speed:
+                    Keyboard_Info.Logo_Speed = value_data[0];
+                    Save_Flash_Set();
+                    break;
+                case id_logo_color:
+                    Keyboard_Info.Logo_Hue        = value_data[0];
+                    Keyboard_Info.Logo_Saturation = value_data[1];
+                    Save_Flash_Set();
+                    break;
+            }
+        } else if (*command_id == id_custom_get_value) {
+            switch (*value_id) {
+                case id_logo_brightness:
+                    value_data[0] = Keyboard_Info.Logo_Brightness;
+                    break;
+                case id_logo_effect:
+                    value_data[0] = Keyboard_Info.Logo_Mode;
+                    break;
+                case id_logo_effect_speed:
+                    value_data[0] = Keyboard_Info.Logo_Speed;
+                    break;
+                case id_logo_color:
+                    value_data[0] = Keyboard_Info.Logo_Hue;
+                    value_data[1] = Keyboard_Info.Logo_Saturation;
+                    break;
+            }
+        }
+        return;
+    }
+#    endif
+
+#    if SIDE_LED_ENABLE
+    if (*channel_id == 4) {
+        via_side_led_command(data, length);
+        return;
+    }
+#    endif
+}
+#endif
