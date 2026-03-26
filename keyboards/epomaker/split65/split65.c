@@ -63,7 +63,7 @@ bool            mac_status            = false;
 bool            charging_state        = false;
 bool            bat_full_flag         = false;
 bool            enable_bat_indicators = true;
-uint32_t        bat_indicator_cnt     = true;
+uint32_t        bat_indicator_cnt     = 0;
 static uint32_t ee_clr_timer          = 0;
 bool            test_white_light_flag = false;
 HSV             start_hsv;

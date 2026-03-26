@@ -19,7 +19,7 @@
 
 #include "wls.h"
 
-static ioline_t col_pins[MATRIX_COLS] = MATRIX_COL_PINS;
+static ioline_t col_pins[] = MATRIX_COL_PINS;
 
 bool hs_modeio_detection(bool update, uint8_t *mode, uint8_t lsat_btdev) {
     static uint32_t scan_timer = 0x00;
