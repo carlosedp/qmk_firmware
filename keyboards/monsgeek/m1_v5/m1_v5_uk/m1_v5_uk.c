@@ -131,11 +131,11 @@ void keyboard_post_init_kb(void) {
 #endif
 
 #ifdef MM_BT_DEF_PIN
-    setPinInputHigh(MM_BT_DEF_PIN);
+    gpio_set_pin_input_high(MM_BT_DEF_PIN);
 #endif
 
 #ifdef MM_2G4_DEF_PIN
-    setPinInputHigh(MM_2G4_DEF_PIN);
+    gpio_set_pin_input_high(MM_2G4_DEF_PIN);
 #endif
 
 #ifdef USB_POWER_EN_PIN
@@ -144,15 +144,15 @@ void keyboard_post_init_kb(void) {
 #endif
 
 #ifdef HS_BAT_CABLE_PIN
-    setPinInput(HS_BAT_CABLE_PIN);
+    gpio_set_pin_input(HS_BAT_CABLE_PIN);
 #endif
 
 #ifdef BAT_FULL_PIN
-    setPinInputHigh(BAT_FULL_PIN);
+    gpio_set_pin_input_high(BAT_FULL_PIN);
 #endif
 
-    setPinInputHigh(SYSTEM_WIN_PIN);
-    setPinInputHigh(SYSTEM_MAC_PIN);
+    gpio_set_pin_input_high(SYSTEM_WIN_PIN);
+    gpio_set_pin_input_high(SYSTEM_MAC_PIN);
 
 #ifdef WIRELESS_ENABLE
     wireless_init();
@@ -877,9 +877,9 @@ void housekeeping_task_user(void) { // loop
     uint8_t         hs_now_mode;
     static uint32_t hs_current_time;
 
-    charging_state = readPin(HS_BAT_CABLE_PIN);
+    charging_state = gpio_read_pin(HS_BAT_CABLE_PIN);
 
-    bat_full_flag = readPin(BAT_FULL_PIN);
+    bat_full_flag = gpio_read_pin(BAT_FULL_PIN);
 
     // Manage LED power and RGB matrix for status indicators
     // Enable LEDs when showing battery status, even if RGB is off
@@ -929,10 +929,10 @@ void housekeeping_task_user(void) { // loop
     }
 
     if (charging_state) {
-        writePin(HS_LED_BOOSTING_PIN, 0);
+        gpio_write_pin(HS_LED_BOOSTING_PIN, 0);
 
     } else {
-        writePin(HS_LED_BOOSTING_PIN, 1);
+        gpio_write_pin(HS_LED_BOOSTING_PIN, 1);
     }
 
     if (timer_elapsed32(hs_ct_time) > 3000 && hs_ct_time) {
@@ -943,7 +943,7 @@ void housekeeping_task_user(void) { // loop
         hs_ct_time = 0;
     }
 
-    if ((readPin(SYSTEM_WIN_PIN) != 0) && (readPin(SYSTEM_MAC_PIN) == 0)) { // mac system
+    if ((gpio_read_pin(SYSTEM_WIN_PIN) != 0) && (gpio_read_pin(SYSTEM_MAC_PIN) == 0)) { // mac system
         if (!keymap_is_mac_system()) {
             set_single_persistent_default_layer(_MBL);
             layer_move(0);
