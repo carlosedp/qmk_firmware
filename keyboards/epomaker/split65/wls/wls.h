@@ -29,7 +29,7 @@
 #define HS_2G4_PIN_STATE 1, 0
 #define HS_USB_PIN_STATE 1, 1
 
-#define HS_GET_MODE_PIN_(pin_bt, pin_2g4) ((((#pin_bt)[0] == 'x') || ((readPin(HS_BT_DEF_PIN) + 0x30) == ((#pin_bt)[0]))) && (((#pin_2g4)[0] == 'x') || ((readPin(HS_2G4_DEF_PIN) + 0x30) == ((#pin_2g4)[0]))))
+#define HS_GET_MODE_PIN_(pin_bt, pin_2g4) ((((#pin_bt)[0] == 'x') || ((gpio_read_pin(HS_BT_DEF_PIN) + 0x30) == ((#pin_bt)[0]))) && (((#pin_2g4)[0] == 'x') || ((gpio_read_pin(HS_2G4_DEF_PIN) + 0x30) == ((#pin_2g4)[0]))))
 #define HS_GET_MODE_PIN(state) HS_GET_MODE_PIN_(state)
 #define HS_MODEIO_DETECTION_TIME 50
 #define HS_LBACK_TIMEOUT (30 * 1000)

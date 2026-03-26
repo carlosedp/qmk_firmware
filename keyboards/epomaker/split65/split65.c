@@ -158,11 +158,11 @@ void keyboard_post_init_kb(void) {
 #endif
 
 #ifdef HS_BT_DEF_PIN
-    setPinInputHigh(HS_BT_DEF_PIN);
+    gpio_set_pin_input_high(HS_BT_DEF_PIN);
 #endif
 
 #ifdef HS_2G4_DEF_PIN
-    setPinInputHigh(HS_2G4_DEF_PIN);
+    gpio_set_pin_input_high(HS_2G4_DEF_PIN);
 #endif
 
 #ifdef USB_POWER_EN_PIN
@@ -171,11 +171,11 @@ void keyboard_post_init_kb(void) {
 #endif
 
 #ifdef HS_BAT_CABLE_PIN
-    setPinInput(HS_BAT_CABLE_PIN);
+    gpio_set_pin_input(HS_BAT_CABLE_PIN);
 #endif
 
 #ifdef BAT_FULL_PIN
-    setPinInputHigh(BAT_FULL_PIN);
+    gpio_set_pin_input_high(BAT_FULL_PIN);
 #endif
 
 #ifdef WIRELESS_ENABLE
@@ -1075,9 +1075,9 @@ void housekeeping_task_user(void) { // loop
     uint8_t         hs_now_mode;
     static uint32_t hs_current_time;
 
-    charging_state = readPin(HS_BAT_CABLE_PIN);
+    charging_state = gpio_read_pin(HS_BAT_CABLE_PIN);
 
-    bat_full_flag = readPin(BAT_FULL_PIN);
+    bat_full_flag = gpio_read_pin(BAT_FULL_PIN);
 
     if (charging_state && (bat_full_flag)) {
         hs_now_mode = MD_SND_CMD_DEVCTRL_CHARGING_DONE;
