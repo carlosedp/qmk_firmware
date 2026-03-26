@@ -18,29 +18,29 @@
 
 #include "rdmctmzt_common.h"
 
-#if LOGO_LED_ENABLE
+#if SIDE_LED_ENABLE
 
-static led_zone_t logo_zone = {
-    .on_off       = &Keyboard_Info.Logo_On_Off,
-    .mode         = &Keyboard_Info.Logo_Mode,
-    .hue          = &Keyboard_Info.Logo_Hue,
-    .saturation   = &Keyboard_Info.Logo_Saturation,
-    .brightness   = &Keyboard_Info.Logo_Brightness,
-    .speed        = &Keyboard_Info.Logo_Speed,
-    .led_start    = LED_LOGO_INDEX,
-    .led_count    = LOGO_LED_COUNT,
-    .via_channel  = 1,
-    .keycode_base = LOGO_TOG,
+static led_zone_t side_zone = {
+    .on_off       = &Keyboard_Info.Side_On_Off,
+    .mode         = &Keyboard_Info.Side_Mode,
+    .hue          = &Keyboard_Info.Side_Hue,
+    .saturation   = &Keyboard_Info.Side_Saturation,
+    .brightness   = &Keyboard_Info.Side_Brightness,
+    .speed        = &Keyboard_Info.Side_Speed,
+    .led_start    = LED_SIDE_INDEX,
+    .led_count    = SIDE_LED_COUNT,
+    .via_channel  = 4,
+    .keycode_base = SIDE_TOG,
 };
 
-void Logo_Led_Update(void) {
-    led_zone_update(&logo_zone);
+void Side_Led_Update(void) {
+    led_zone_update(&side_zone);
 }
-bool process_logo_led_keycodes(uint16_t keycode, keyrecord_t *record) {
-    return process_led_zone_keycodes(&logo_zone, keycode, record);
+bool process_side_led_keycodes(uint16_t keycode, keyrecord_t *record) {
+    return process_led_zone_keycodes(&side_zone, keycode, record);
 }
-void via_logo_led_command(uint8_t *data, uint8_t length) {
-    via_led_zone_command(&logo_zone, data, length);
+void via_side_led_command(uint8_t *data, uint8_t length) {
+    via_led_zone_command(&side_zone, data, length);
 }
 
-#endif // LOGO_LED_ENABLE
+#endif // SIDE_LED_ENABLE

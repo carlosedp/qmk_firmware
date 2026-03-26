@@ -471,6 +471,9 @@ void kb_housekeeping_task(void) {
     // This allows logo LEDs to work even when per-key RGB is disabled
     Logo_Led_Update();
 #endif
+#if SIDE_LED_ENABLE
+    Side_Led_Update();
+#endif
 
     // Handle EEPROM reset request
     if (Keyboard_Reset) {
@@ -490,6 +493,14 @@ void kb_housekeeping_task(void) {
         Keyboard_Info.Logo_Saturation = 255;
         Keyboard_Info.Logo_Brightness = 180;
         Keyboard_Info.Logo_Speed      = 2;
+#endif
+#if SIDE_LED_ENABLE
+        Keyboard_Info.Side_On_Off     = 1;
+        Keyboard_Info.Side_Mode       = 1; // Wave animation
+        Keyboard_Info.Side_Hue        = 0;
+        Keyboard_Info.Side_Saturation = 255;
+        Keyboard_Info.Side_Brightness = 180;
+        Keyboard_Info.Side_Speed      = 2;
 #endif
         // Save the reset keyboard info to EEPROM
         eeprom_write_block_user((void *)&Keyboard_Info.Key_Mode, 0, sizeof(Keyboard_Info_t));

@@ -1,12 +1,3 @@
-# Build Options
-#   change yes to no to disable
-#
-# Board: it should exist either in <chibios>/os/hal/boards/
-#  or <this_dir>/boards
-
-# Disable header guard warning for library files we can't modify
-# EXTRAFLAGS += -Wno-error=header-guard
-
 # MCU configuration
 MCU_FAMILY = ES32
 MCU_SERIES = FS026
@@ -37,17 +28,7 @@ EEPROM_DRIVER = custom
 NO_USB_STARTUP_CHECK = yes
 BLUETOOTH_CUSTOM = yes
 
-# Silence header-guard mismatch warnings from upstream CMSIS headers (not editable here).
-# Treat header-guard warning as non-fatal so it doesn't stop the build.
-
-ENCODER_MAP_ENABLE = yes
-
-# RGB Matrix is configured in keyboard.json with custom driver
-# The driver implementation is in user_led_custom.c
-# Explicitly define RGB_MATRIX_ENABLE for VIA compatibility
-OPT_DEFS += -DRGB_MATRIX_ENABLE
-
-# Include common library (replaces rdr_lib if present)
+# Include common library (replaces rdr_lib)
 VPATH += lib/rdmctmzt_common
 EXTRAINCDIRS += $(TOP_DIR)/lib/rdmctmzt_common
 SRC += rdmctmzt_common.c \
@@ -57,10 +38,11 @@ SRC += rdmctmzt_common.c \
 	user_eeprom.c \
 	user_emi.c \
 	user_led_custom.c \
+	user_spi.c \
+	user_system.c \
 	user_led_zone.c \
 	user_logo_led.c \
-	user_spi.c \
-	user_system.c
+	user_side_led.c
 
 # Include dynamic keymap support
 SRC += quantum/dynamic_keymap.c
@@ -68,3 +50,6 @@ SRC += quantum/dynamic_keymap.c
 # Include FS026 SPI driver
 VPATH += lib/chibios-contrib/os/common/ext/CMSIS/ES32/FS026/md
 SRC += lib/chibios-contrib/os/common/ext/CMSIS/ES32/FS026/md/md_spi.c
+
+ENCODER_MAP_ENABLE = yes
+DEBOUNCE_TYPE = asym_eager_defer_pk
