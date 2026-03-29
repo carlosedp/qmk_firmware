@@ -16,17 +16,15 @@ bool hs_modeio_detection(bool update, uint8_t *mode, uint8_t lsat_btdev, uint8_t
     scan_timer = timer_read32();
 #if defined(HS_BT_DEF_PIN) && defined(HS_2G4_DEF_PIN)
     uint8_t        now_mode  = 0x00;
-    uint8_t        hs_mode   = 0x00;
     static uint8_t last_mode = 0x00;
     bool           sw_mode   = false;
     // Read physical switch position
     now_mode = (HS_GET_MODE_PIN(HS_USB_PIN_STATE) ? 3 : (HS_GET_MODE_PIN(HS_BT_PIN_STATE) ? 1 : ((HS_GET_MODE_PIN(HS_2G4_PIN_STATE) ? 2 : 0))));
-    // Get current active device mode from wireless system (not from *mode parameter which can be stale)
-    uint8_t current_devs = wireless_get_current_devs();
-    // Determine what type of mode we're in (Mac wireless=1, Windows wireless=2, USB=3)
-    hs_mode = ((current_devs >= DEVS_BT1 && current_devs <= DEVS_BT5) || current_devs == DEVS_2G4) ? ((now_mode == 1) ? 1 : ((now_mode == 2) ? 2 : 3)) : ((current_devs == DEVS_USB) ? 3 : 0);
-    // Detect mode change: physical switch changed position OR there's a mismatch between switch and current mode
-    sw_mode   = ((update || (last_mode == now_mode)) && (hs_mode != now_mode)) ? true : false;
+    // Only re-sync to the physical switch when it actually moves (last_mode != now_mode).
+    // Checking for a software/hardware mismatch (hs_mode != now_mode) with a stationary switch
+    // would revert any manual device switch (e.g. Fn+T for USB while switch is in a wireless
+    // position) every 50ms. update=true paths (keypress mode checks) never execute this branch.
+    sw_mode   = (!update && (last_mode != now_mode));
     last_mode = now_mode;
 
     switch (now_mode) {

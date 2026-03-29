@@ -324,12 +324,10 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
         } break;
 
         case KC_USB: {
-            uint8_t mode = hs_none;
-            hs_modeio_detection(true, &mode, confinfo.last_btdevs, confinfo.last_wireless_dev);
-            if ((mode == hs_usb) || (mode == hs_none)) {
-                WLS_KEYCODE_EXEC(DEVS_USB);
-                hs_rgb_blink_set_timer(timer_read32());
-            }
+            // Allow USB switching regardless of physical switch position,
+            // so manual Fn+T works even in wireless/battery mode.
+            WLS_KEYCODE_EXEC(DEVS_USB);
+            hs_rgb_blink_set_timer(timer_read32());
         } break;
         default:
             return true;
