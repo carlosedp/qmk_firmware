@@ -144,7 +144,7 @@
 		{"name": "BLE2",     "title": "Set to Bluetooth Channel 2 working mode", "shortName": "MD_BLE2" },
 		{"name": "BLE3",     "title": "Set to Bluetooth Channel 3 working mode", "shortName": "MD_BLE3" },
 		{"name": "USB",	     "title": "Set to USB working mode",                 "shortName": "MD_USB"  },
-		{"name": "BAT",      "title": "Querying Battery Status",                 "shortName": "QK_BAT"  },
+		{"name": "BAT",      "title": "Query Battery Status",                 "shortName": "QK_BAT"  },
 		{"name": "WLO",      "title": "Lock Windows Key",                                "shortName": "QK_WLO"  },
 		{"name": "NKRO",    "title": "NKRO Toggle",                 "shortName": "SIX_N"   },
         {"name": "TColor",  "title": "QMK Test Color",                  "shortName": "TEST_CL" },
