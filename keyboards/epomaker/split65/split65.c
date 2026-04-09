@@ -11,6 +11,10 @@
 #    include "usb_main.h"
 #    include "lowpower.h"
 #    include "module.h"
+
+// Add this forward declaration
+void usb_mode_test_report_task(void);
+extern bool im_test_rate_flag;
 #endif
 
 typedef union {
@@ -146,16 +150,27 @@ void keyboard_post_init_kb(void) {
 
     eeconfig_confinfo_init();
 
+    // Only master controls LED_POWER_EN_PIN/EN2_PIN directly
+    // Slave uses A5/A8 controlled via RPC commands
+    if (is_keyboard_master()) {
 #ifdef LED_POWER_EN_PIN
-    gpio_set_pin_output(LED_POWER_EN_PIN);
-    if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN_PIN);
-
+        gpio_set_pin_output(LED_POWER_EN_PIN);
+        if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN_PIN);
 #endif
 
 #ifdef LED_POWER_EN2_PIN
-    gpio_set_pin_output(LED_POWER_EN2_PIN);
-    if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN2_PIN);
+        gpio_set_pin_output(LED_POWER_EN2_PIN);
+        if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN2_PIN);
 #endif
+    } else {
+        // Slave: initialize A5/A8 directly (not via LED_POWER_EN defines)
+        gpio_set_pin_output(A5);
+        gpio_set_pin_output(A8);
+        if (rgb_matrix_get_val() != 0) {
+            gpio_write_pin_high(A5);
+            gpio_write_pin_high(A8);
+        }
+    }
 
 #ifdef HS_BT_DEF_PIN
     gpio_set_pin_input_high(HS_BT_DEF_PIN);
@@ -214,13 +229,16 @@ void usb_power_disconnect(void) {
 }
 
 void suspend_power_down_kb(void) {
+    // Only master controls LED_POWER_EN pins - slave uses A5/A8 via RPC
+    if (is_keyboard_master()) {
 #    ifdef LED_POWER_EN_PIN
-    gpio_write_pin_low(LED_POWER_EN_PIN);
+        gpio_write_pin_low(LED_POWER_EN_PIN);
 #    endif
 
 #    ifdef LED_POWER_EN2_PIN
-    gpio_write_pin_low(LED_POWER_EN2_PIN);
+        gpio_write_pin_low(LED_POWER_EN2_PIN);
 #    endif
+    }
 
     suspend_power_down_user();
 }
@@ -228,43 +246,94 @@ void suspend_power_down_kb(void) {
 void suspend_wakeup_init_kb(void) {
     // Give split UART time to stabilize before powering LEDs
     // This prevents flickering on the slave/right half
-    wait_ms(50);
+    // wait_ms(50);
 
     // Clear keyboard state to prevent stuck modifiers
     // This ensures clean state after wake, especially important
     // when waking with modifier keys from the slave half
-    clear_keyboard();
+    // clear_keyboard();
 
+    // Only master controls LED_POWER_EN pins - slave uses A5/A8 via RPC
+    if (is_keyboard_master()) {
 #    ifdef LED_POWER_EN_PIN
-    if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN_PIN);
+        if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN_PIN);
 #    endif
 
 #    ifdef LED_POWER_EN2_PIN
-    if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN2_PIN);
+        if (rgb_matrix_get_val() != 0) gpio_write_pin_high(LED_POWER_EN2_PIN);
 #    endif
+    }
 
     wireless_devs_change(wireless_get_current_devs(), wireless_get_current_devs(), false);
     suspend_wakeup_init_user();
     hs_rgb_blink_set_timer(timer_read32());
 }
 
-bool lpwr_is_allow_timeout_hook(void) {
-    // Enable LPWR deep sleep in wireless mode for maximum battery life
-    // Trade-off: Only the left half can wake the keyboard from deep sleep
-    //
-    // When master enters LPWR, it stops polling the slave to save power
-    // This means right-side keys cannot wake the keyboard
-    //
-    // To allow both halves to wake (at cost of battery life):
-    // Change the return value below from true to false
+void suspend_wakeup_init_user(void) {
+    usart_init();
+    master_to_slave_t m2s = {0};
+    slave_to_master_t s2m = {0};
+    m2s.cmd               = 0xCC;
+    if (transaction_rpc_exec(USER_SYNC_MMS, sizeof(m2s), &m2s, sizeof(s2m), &s2m)) {
+        if (s2m.resp == 0x00) {}
+        dprintf("Slave Sleep OK\n");
+    } else {
+        dprint("Slave sync failed!\n");
+    }
+}
 
-    // In USB mode, don't use LPWR - USB host handles power management
-    if (wireless_get_current_devs() == DEVS_USB) {
+void suspend_power_down_user(void) {
+
+    master_to_slave_t m2s = {0};
+    slave_to_master_t s2m = {0};
+    m2s.cmd               = 0xBB;
+    if (transaction_rpc_exec(USER_SYNC_MMS, sizeof(m2s), &m2s, sizeof(s2m), &s2m)) {
+        if (s2m.resp == 0x00) {}
+        dprintf("Slave Sleep OK\n");
+    } else {
+        dprint("Slave sync failed!\n");
+    }
+
+}
+
+bool lpwr_is_allow_timeout_hook(void) {
+
+    if (wireless_get_current_devs() == DEVS_USB && is_keyboard_master()) {
         return false;
     }
 
-    // Enable deep sleep in wireless mode - left-side wake only
-    // Change to 'return false;' for both-halves wake with reduced battery life
+    return true;
+}
+
+bool lpwr_is_allow_presleep_hook(void) {
+    extern bool charging_state;
+
+    if (is_keyboard_master()) {
+        master_to_slave_t m2s = {0};
+        slave_to_master_t s2m = {0};
+        m2s.cmd               = 0xAA;
+        m2s.body[0] = lower_sleep;
+        if (transaction_rpc_exec(USER_SYNC_MMS, sizeof(m2s), &m2s, sizeof(s2m), &s2m)) {
+            if (s2m.resp == 0x00) {}
+            dprintf("Slave Sleep OK\n");
+        } else {
+            dprint("Slave sync failed!\n");
+        }
+
+        if (confinfo.devs != DEVS_USB) {
+            palSetLineMode(SERIAL_USART_RX_PIN, PAL_OUTPUT_TYPE_OPENDRAIN);
+            palSetLineMode(SERIAL_USART_TX_PIN, PAL_OUTPUT_TYPE_OPENDRAIN);
+        }
+    }
+
+    if ((wireless_get_current_devs() == DEVS_USB) && (!charging_state)) {
+
+        if (USB_DRIVER.state != USB_STOP) {
+            usb_power_disconnect();
+            usbDisconnectBus(&USBD1);
+            usbStop(&USBD1);
+        }
+    }
     return true;
 }
 
@@ -337,7 +406,8 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 #    define WLS_KEYCODE_EXEC(wls_dev)                                                                                          \
         do {                                                                                                                   \
             if (record->event.pressed) {                                                                                       \
-                if (wireless_get_current_devs() != wls_dev) wireless_devs_change(wireless_get_current_devs(), wls_dev, false); \
+                if (wireless_get_current_devs() != wls_dev)                                                                    \
+                    wireless_devs_change(wireless_get_current_devs(), wls_dev, false);                                         \
                 if (wls_process_long_press_token == INVALID_DEFERRED_TOKEN) {                                                  \
                     wls_process_long_press_token = defer_exec(WLS_KEYCODE_PAIR_TIME, wls_process_long_press, &keycode_shadow); \
                 }                                                                                                              \
@@ -390,7 +460,13 @@ bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
 }
 #endif
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+bool process_record_user_split65(uint16_t keycode, keyrecord_t *record) {
+
+    // Call the user's keymap function first
+    if (!process_record_user(keycode, record)) {
+        return false;
+    }
+
     if (test_white_light_flag && record->event.pressed) {
         test_white_light_flag = false;
         rgb_matrix_set_color_all(0x00, 0x00, 0x00);
@@ -510,7 +586,8 @@ void im_rgblight_increase(void) {
 uint32_t hs_ct_time;
 RGB      rgb_test_open;
 bool     process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    if (process_record_user(keycode, record) != true) {
+
+    if (process_record_user_split65(keycode, record) != true) {
         return false;
     }
 
@@ -970,8 +1047,10 @@ bool     process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RM_VALU: {
             if (record->event.pressed) {
                 rgb_matrix_enable();
-                gpio_write_pin_high(LED_POWER_EN_PIN);
-                gpio_write_pin_high(LED_POWER_EN2_PIN);
+                if (is_keyboard_master()) {
+                    gpio_write_pin_high(LED_POWER_EN_PIN);
+                    gpio_write_pin_high(LED_POWER_EN2_PIN);
+                }
                 if (rgb_matrix_get_speed() >= 120) {
                     rgb_blink_dir();
                 }
@@ -980,8 +1059,10 @@ bool     process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case RM_VALD: {
             if (record->event.pressed) {
                 if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
-                    gpio_write_pin_low(LED_POWER_EN_PIN);
-                    gpio_write_pin_low(LED_POWER_EN2_PIN);
+                    if (is_keyboard_master()) {
+                        gpio_write_pin_low(LED_POWER_EN_PIN);
+                        gpio_write_pin_low(LED_POWER_EN2_PIN);
+                    }
                     for (uint8_t i = 0; i < RGB_MATRIX_LED_COUNT; i++) {
                         rgb_matrix_set_color(i, 0, 0, 0);
                     }
@@ -1070,7 +1151,12 @@ bool     process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-void housekeeping_task_user(void) { // loop
+void housekeeping_task_kb(void) { // loop
+
+    // Came from wireless.c
+    if (wireless_get_current_devs() == DEVS_USB && im_test_rate_flag) usb_mode_test_report_task();
+        wireless_task();
+
 #ifdef WIRELESS_ENABLE
     uint8_t         hs_now_mode;
     static uint32_t hs_current_time;
@@ -1104,6 +1190,9 @@ void housekeeping_task_user(void) { // loop
 #endif
         }
     }
+
+    // Call the user-level function at the end
+    housekeeping_task_user();
 }
 
 #ifdef RGB_MATRIX_ENABLE
@@ -1257,9 +1346,13 @@ void rgb_matrix_hs_bat(void) {
         }
     }
 }
-
+bool temp,im_test_rate_flag;
 void bat_indicators(void) {
     static uint32_t battery_process_time = 0;
+
+    if (!is_keyboard_master())  {
+        return;
+    }
 
     if (charging_state && (bat_full_flag)) {
         battery_process_time = 0;
@@ -1268,7 +1361,8 @@ void bat_indicators(void) {
         battery_process_time = 0;
         if (im_bat_req_charging_flag) rgb_matrix_set_color(HS_MATRIX_BLINK_INDEX_BAT, 0x00, 0xFF, 0x00);
     } else if (*md_getp_bat() <= BATTERY_CAPACITY_LOW) {
-        rgb_matrix_hs_bat_set(HS_MATRIX_BLINK_INDEX_BAT, (RGB){0xFF, 0x00, 0x00}, 250, 1);
+        // was 250, changing to 30000 to blink every 30 seconds instead of 4 times a second
+        rgb_matrix_hs_bat_set(HS_MATRIX_BLINK_INDEX_BAT, (RGB){0xFF, 0x00, 0x00}, 30000, 1);
 
         if (*md_getp_bat() <= BATTERY_CAPACITY_STOP) {
             if (!battery_process_time) {
@@ -1479,34 +1573,64 @@ void lpwr_wakeup_hook(void) {
 #endif
 
     // Delay to ensure split communication is ready before LED power changes
-    // Prevents RGB flickering on slave half during wake from deep sleep
+    // Prevents flickering on the slave/right half during wake from deep sleep
     wait_ms(50);
 
-    if (rgb_matrix_get_val() != 0) {
-        gpio_write_pin_high(LED_POWER_EN_PIN);
-        gpio_write_pin_high(LED_POWER_EN2_PIN);
+    if (is_keyboard_master()) {
+        // Master controls its LED pins via LED_POWER_EN defines
+        if (rgb_matrix_get_val() != 0) {
+            gpio_write_pin_high(LED_POWER_EN_PIN);
+            gpio_write_pin_high(LED_POWER_EN2_PIN);
+        } else {
+            gpio_write_pin_low(LED_POWER_EN_PIN);
+            gpio_write_pin_low(LED_POWER_EN2_PIN);
+        }
     } else {
-        gpio_write_pin_low(LED_POWER_EN_PIN);
-        gpio_write_pin_low(LED_POWER_EN2_PIN);
+        // Slave controls A5/A8 directly (not via LED_POWER_EN defines)
+        if (rgb_matrix_get_val() != 0) {
+            gpio_write_pin_high(A5);
+            gpio_write_pin_high(A8);
+        } else {
+            gpio_write_pin_low(A5);
+            gpio_write_pin_low(A8);
+        }
     }
 }
 
-void user_sync_mms_slave_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    const master_to_slave_t *m2s = (const master_to_slave_t *)in_data;
-    slave_to_master_t       *s2m = (slave_to_master_t *)out_data;
+void user_sync_mms_slave_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data){
+    const master_to_slave_t *m2s = (const master_to_slave_t*)in_data;
+    slave_to_master_t *s2m = (slave_to_master_t*)out_data;
 
-    switch (m2s->cmd) {
-        case 0x55: // sync multimode
-#ifdef WIRELESS_ENABLE
+    switch(m2s->cmd)
+    {
+        case 0x55:  //sync multimode
             wireless_devs_change(m2s->body[0], m2s->body[1], false);
-#endif
+            s2m->resp = 0x00;
+        break;
+        case 0xAA:
+            if (confinfo.devs != DEVS_USB) {
+                palSetLineMode(SERIAL_USART_RX_PIN, PAL_OUTPUT_TYPE_OPENDRAIN);
+                palSetLineMode(SERIAL_USART_TX_PIN, PAL_OUTPUT_TYPE_OPENDRAIN);
+            }
+            s2m->resp = 0x00;
+            lower_sleep = m2s->body[0];
+            lpwr_set_timeout_manual(true);
+            break;
+        case 0xBB:
+
+            gpio_write_pin_low(A5);
+            gpio_write_pin_low(A8);
+            s2m->resp = 0x00;
+            break;
+        case 0xCC:
+            gpio_write_pin_high(A5);
+            gpio_write_pin_high(A8);
             s2m->resp = 0x00;
             break;
         case 0xDD:
             hs_reset_settings();
             s2m->resp = 0x00;
             break;
-        default:
-            break;
+        default :break;
     }
 }
