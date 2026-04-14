@@ -4,7 +4,8 @@ A customizable 85key keyboard.
 
 [Vero75](https://chosfox.com/products/vero75)
 
-* Hardware Supported: Vero75 PCB with es32fs026 microcontroller
+* Keyboard Maintainer: [BunnyHorseCat](https://github.com/BunnyHorseCat/)
+* Hardware Supported: Chosfox Vero75 with es32fs026 microcontroller
 
 Make example for this keyboard (after setting up your build environment):
 
