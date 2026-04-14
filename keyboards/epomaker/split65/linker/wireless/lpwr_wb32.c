@@ -9,11 +9,25 @@
 #    include "uart.h"
 #endif
 
-/*
- * Removed [MATRIX_ROWS] and [MATRIX_COLS] to fix sleep mode
- */
-static ioline_t row_pins[] = MATRIX_ROW_PINS;
-static ioline_t col_pins[] = MATRIX_COL_PINS;
+#define MATRIX_SPLIT_IS_MASTER()       true
+
+#if defined(MATRIX_ROW_PINS_RIGHT) && defined(MATRIX_COL_PINS_RIGHT)
+    #define LP_MATRIX_ROWS                 MATRIX_ROWS/2
+    #    undef MATRIX_SPLIT_IS_MASTER
+    #    define MATRIX_SPLIT_IS_MASTER() is_keyboard_master()
+#else
+    #define LP_MATRIX_ROWS                 MATRIX_ROWS
+#endif
+
+#define LP_MATRIX_COLS                 MATRIX_COLS
+
+static ioline_t row_pins[LP_MATRIX_ROWS] = MATRIX_ROW_PINS;
+static ioline_t col_pins[LP_MATRIX_COLS] = MATRIX_COL_PINS;
+
+#if defined(MATRIX_ROW_PINS_RIGHT) && defined(MATRIX_COL_PINS_RIGHT)
+static ioline_t row_pins_r[LP_MATRIX_ROWS] = MATRIX_ROW_PINS_RIGHT;
+static ioline_t col_pins_r[LP_MATRIX_COLS] = MATRIX_COL_PINS_RIGHT;
+#endif
 
 #if PAL_USE_CALLBACKS != TRUE
 #    error PAL_USE_CALLBACKS must be set to TRUE!
@@ -42,11 +56,13 @@ void palcallback(void *arg) {
 
     switch (line) {
 #ifndef LPWR_UART_WAKEUP_DISABLE
-        case PAL_PAD(UART_RX_PIN):
-        case PAL_PAD(SERIAL_USART_RX_PIN): {
+        case PAL_PAD(UART_RX_PIN): {
             lpwr_set_sleep_wakeupcd(LPWR_WAKEUP_UART);
         } break;
 #endif
+        case(18):{
+            lpwr_set_sleep_wakeupcd(LPWR_WAKEUP_USB);
+        }break;
         default: {
             lpwr_set_sleep_wakeupcd(LPWR_WAKEUP_MATRIX);
         } break;
@@ -59,6 +75,7 @@ void palcallback(void *arg) {
 }
 
 void pal_events_init(void) {
+
     for (uint8_t i = 0; i < 16; i++) {
         _pal_events[i].cb  = palcallback;
         _pal_events[i].arg = (void *)(uint32_t)i;
@@ -69,9 +86,11 @@ void lpwr_exti_init_hook(void) __attribute__((weak));
 void lpwr_exti_init_hook(void) {}
 
 void lpwr_exti_init(void) {
+
     pal_events_init();
 
 #if DIODE_DIRECTION == ROW2COL
+    if (MATRIX_SPLIT_IS_MASTER()){
     for (uint8_t i = 0; i < ARRAY_SIZE(col_pins); i++) {
         if (col_pins[i] != NO_PIN) {
             gpio_set_pin_output_open_drain(col_pins[i]);
@@ -84,6 +103,22 @@ void lpwr_exti_init(void) {
             gpio_set_pin_input_high(row_pins[i]);
             waitInputPinDelay();
             palEnableLineEvent(row_pins[i], PAL_EVENT_MODE_FALLING_EDGE);
+        }
+    }
+    } else {
+        for (uint8_t i = 0; i < ARRAY_SIZE(col_pins_r); i++) {
+            if (col_pins_r[i] != NO_PIN) {
+                gpio_set_pin_output_open_drain(col_pins_r[i]);
+                gpio_write_pin_low(col_pins_r[i]);
+            }
+        }
+
+        for (uint8_t i = 0; i < ARRAY_SIZE(row_pins_r); i++) {
+            if (row_pins_r[i] != NO_PIN) {
+                gpio_set_pin_input_high(row_pins_r[i]);
+                waitInputPinDelay();
+                palEnableLineEvent(row_pins_r[i], PAL_EVENT_MODE_FALLING_EDGE);
+            }
         }
     }
 #elif DIODE_DIRECTION == COL2ROW
@@ -103,19 +138,25 @@ void lpwr_exti_init(void) {
     }
 #endif
 
-#ifndef LPWR_UART_WAKEUP_DISABLE
-    gpio_set_pin_input(UART_RX_PIN);
-    waitInputPinDelay();
-    palEnableLineEvent(UART_RX_PIN, PAL_EVENT_MODE_BOTH_EDGES);
+// Disabled UART_RX_PIN wake - prevents wireless module communication from waking device
+// This fixes the issue where the 30-minute deep sleep command wakes the device
+// #ifndef LPWR_UART_WAKEUP_DISABLE
+//     extern bool lower_sleep;
+//     if (!lower_sleep){
+//     setPinInput(UART_RX_PIN);
+//     waitInputPinDelay();
+//     palEnableLineEvent(UART_RX_PIN, PAL_EVENT_MODE_BOTH_EDGES);
+//     }
+// #endif
 
-    // Master needs to wake when slave sends data
-    if (is_keyboard_master()) {
-        gpio_set_pin_input_high(SERIAL_USART_RX_PIN);
-        waitInputPinDelay();
-        palEnableLineEvent(SERIAL_USART_RX_PIN, PAL_EVENT_MODE_BOTH_EDGES);
-    }
+#ifdef SPLIT_KEYBOARD
+    gpio_set_pin_input(SERIAL_USART_RX_PIN);
+    waitInputPinDelay();
+    palEnableLineEvent(SERIAL_USART_RX_PIN, PAL_EVENT_MODE_BOTH_EDGES);
 #endif
 
+    palEnableLineEvent(A12,PAL_EVENT_MODE_RISING_EDGE);
+    nvicEnableVector(USBP_WKUP_IRQn,6);
     lpwr_exti_init_hook();
 
     /* IRQ subsystem initialization.*/
@@ -126,6 +167,7 @@ void lpwr_clock_enable_user(void) __attribute__((weak));
 void lpwr_clock_enable_user(void) {}
 
 void lpwr_clock_enable(void) {
+
     __early_init();
 
     PWR->ANAKEY1 = 0x03;
@@ -148,21 +190,21 @@ void lpwr_clock_enable(void) {
     RCC->USBFIFOCLKENR = RCC_USBFIFOCLKENR_CLKEN;
 
     /* Configure and enable USBCLK */
-#if (WB32_USBPRE == WB32_USBPRE_DIV1P5)
+#        if (WB32_USBPRE == WB32_USBPRE_DIV1P5)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= RCC_USBPRE_RATIO_1_5;
     RCC->USBPRE |= RCC_USBPRE_DIVEN;
-#elif (WB32_USBPRE == WB32_USBPRE_DIV1)
+#        elif (WB32_USBPRE == WB32_USBPRE_DIV1)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= 0x00;
-#elif (WB32_USBPRE == WB32_USBPRE_DIV2)
+#        elif (WB32_USBPRE == WB32_USBPRE_DIV2)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= RCC_USBPRE_RATIO_2;
     RCC->USBPRE |= RCC_USBPRE_DIVEN;
-#elif (WB32_USBPRE == WB32_USBPRE_DIV3)
+#        elif (WB32_USBPRE == WB32_USBPRE_DIV3)
     RCC->USBCLKENR = RCC_USBCLKENR_CLKEN;
     RCC->USBPRE    = RCC_USBPRE_SRCEN;
     RCC->USBPRE |= RCC_USBPRE_RATIO_3;
@@ -192,20 +234,33 @@ void lpwr_clock_enable(void) {
     rccEnableI2C2();
 #endif
 
-#ifndef LPWR_UART_WAKEUP_DISABLE
-    // Restore wireless module UART pins
-    palSetLineMode(UART_RX_PIN, PAL_MODE_ALTERNATE(UART_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
-    palSetLineMode(UART_TX_PIN, PAL_MODE_ALTERNATE(UART_TX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+#if WB32_GPT_USE_TIM1 || WB32_ICU_USE_TIM1 || WB32_PWM_USE_TIM1
+    rccEnableTIM1();
+#endif
+#if WB32_ST_USE_TIM2 || WB32_GPT_USE_TIM2 || WB32_ICU_USE_TIM2 || WB32_PWM_USE_TIM2
+    rccEnableTIM2();
+#endif
+#if WB32_ST_USE_TIM3 || WB32_GPT_USE_TIM3 || WB32_ICU_USE_TIM3 || WB32_PWM_USE_TIM3
+    rccEnableTIM3();
+#endif
+#if WB32_ST_USE_TIM4 || WB32_GPT_USE_TIM4 || WB32_ICU_USE_TIM4 || WB32_PWM_USE_TIM4
+    rccEnableTIM4();
+#endif
 
-    // Restore split keyboard SERIAL_USART pins
-    palSetLineMode(SERIAL_USART_RX_PIN, PAL_MODE_ALTERNATE(SERIAL_USART_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+#ifndef LPWR_UART_WAKEUP_DISABLE
+    palSetLineMode(UART_RX_PIN, PAL_MODE_ALTERNATE(UART_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+#endif
+
+#ifdef SPLIT_KEYBOARD
     palSetLineMode(SERIAL_USART_TX_PIN, PAL_MODE_ALTERNATE(SERIAL_USART_TX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
+    palSetLineMode(SERIAL_USART_RX_PIN, PAL_MODE_ALTERNATE(SERIAL_USART_RX_PAL_MODE) | PAL_OUTPUT_TYPE_PUSHPULL | PAL_OUTPUT_SPEED_HIGHEST);
 #endif
 
     lpwr_clock_enable_user();
 }
 
 void wb32_stop_mode(void) {
+
     SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 
     /* Prevent the chip from being unable to enter stop mode due to pending interrupts */
@@ -213,12 +268,11 @@ void wb32_stop_mode(void) {
     EXTI->PR = 0x7FFFF;
     for (uint8_t i = 0; i < 8; i++) {
         for (uint8_t j = 0; j < 32; j++) {
-            /*
+             /*
              * Recommended by AI to prevent instant/false wakeups
              */
-            uint32_t mask = (0x01UL << j);
-            if (NVIC->ISPR[i] & mask) {
-                NVIC->ICPR[i] = mask; /* Properly clear pending IRQ */
+            if (NVIC->ISPR[i] & (0x01UL << j)) {
+                NVIC->ICPR[i] = (0x01UL << j);
             }
         }
     }
@@ -249,5 +303,6 @@ void wb32_stop_mode(void) {
 }
 
 void mcu_stop_mode(void) {
+
     wb32_stop_mode();
 }

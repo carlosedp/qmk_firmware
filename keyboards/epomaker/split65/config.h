@@ -44,7 +44,7 @@
 #define HS_PAIR_COLOR_USB RGB_GREEN
 
 /* Battery */
-#define BATTERY_CAPACITY_LOW 15
+#define BATTERY_CAPACITY_LOW 5 // Was 15 but battery stayed at 10% for a long time
 #define BATTERY_CAPACITY_STOP 0
 #define RGB_MATRIX_BAT_INDEX_MAP {27, 26, 25, 24, 23, 22, 29, 30, 31, 32}
 

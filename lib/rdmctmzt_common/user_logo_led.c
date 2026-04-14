@@ -29,7 +29,7 @@ static led_zone_t logo_zone = {
     .speed        = &Keyboard_Info.Logo_Speed,
     .led_start    = LED_LOGO_INDEX,
     .led_count    = LOGO_LED_COUNT,
-    .via_channel  = 1,
+    .via_channel  = 2,
     .keycode_base = LOGO_TOG,
 };
 
