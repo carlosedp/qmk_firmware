@@ -34,6 +34,11 @@
         "rows": ["B0", "B3", "B4", "B5", "B6", "B7"]
     },
 
+    "build": {
+	    "debounce_type":
+    "sym_eager_pk"
+	},
+    "debounce": 50,
     "diode_direction": "ROW2COL",
     "features": {
         "bootmagic": true,

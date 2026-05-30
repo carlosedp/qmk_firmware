@@ -30,8 +30,6 @@
 /* Ensure we jump to bootloader if the RESET keycode was pressed */
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
 
-#define DEBOUNCE 5
-
 #ifndef NOP_FUDGE
 #    define NOP_FUDGE 0.4
 #endif
