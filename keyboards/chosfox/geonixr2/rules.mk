@@ -53,5 +53,3 @@ SRC += quantum/dynamic_keymap.c
 # Include FS026 SPI driver
 VPATH += lib/chibios-contrib/os/common/ext/CMSIS/ES32/FS026/md
 SRC += lib/chibios-contrib/os/common/ext/CMSIS/ES32/FS026/md/md_spi.c
-
-DEBOUNCE_TYPE = asym_eager_defer_pk
