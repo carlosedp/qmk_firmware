@@ -26,6 +26,7 @@ They keyboards that have been incorporated are:
 - Chosfox Geonix R2
 - Cidoo QK61 v2
 - Chosfox Vero75
+- Cerakey Zen75
 - Epomaker TH85
 - Epomaker Split 65
 
