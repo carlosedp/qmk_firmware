@@ -8,7 +8,7 @@
 #    include "usb_endpoints.h"
 #    include "usb_main.h"
 
-void __attribute__((weak)) replaced_hid_send(uint8_t *data, uint8_t length) {
+void replaced_hid_send(uint8_t *data, uint8_t length) {
     if (length != RAW_EPSIZE) {
         return;
     }

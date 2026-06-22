@@ -4,7 +4,11 @@ WIRELESS_DIR = $(TOP_DIR)/keyboards/$(KEYBOARD)/linker/wireless
 ifeq ($(strip $(WIRELESS_ENABLE)), yes)
     OPT_DEFS += -DWIRELESS_ENABLE -DNO_USB_STARTUP_CHECK
 
-    OPT_DEFS += -include $(WIRELESS_DIR)/md_raw.h
+    # quantum/via.c calls raw_hid_send() directly to forward HID reports.
+    # Redirect just that one translation unit to our wireless-aware
+    # replaced_hid_send() so quantum/raw_hid.c's USB-only implementation is
+    # left untouched (no core files modified, no symbol clash).
+    $(INTERMEDIATE_OUTPUT)/quantum/via.o: FILE_SPECIFIC_CFLAGS += -Draw_hid_send=replaced_hid_send
 
     UART_DRIVER_REQUIRED ?= yes
     WIRELESS_LPWR_STOP_ENABLE ?= yes
