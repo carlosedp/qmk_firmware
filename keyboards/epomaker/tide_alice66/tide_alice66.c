@@ -6,11 +6,10 @@
 #include "rgb_record/rgb_record.h"
 #include "rgb_record/rgb_rgblight.h"
 
-
 #ifdef WIRELESS_ENABLE
-#    include "wireless.h"
-#    include "usb_main.h"
-#    include "lowpower.h"
+#include "lowpower.h"
+#include "usb_main.h"
+#include "wireless.h"
 #endif
 
 typedef union {
@@ -56,15 +55,14 @@ void rgb_matrix_hs_indicator(void);
 void rgb_matrix_hs_indicator_set(uint8_t index, RGB rgb, uint32_t interval, uint8_t times);
 void rgb_matrix_hs_set_remain_time(uint8_t index, uint8_t remain_time);
 
-
 #define keymap_is_mac_system() ((get_highest_layer(default_layer_state) == _MBL) || (get_highest_layer(default_layer_state) == _FMBL))
-#define keymap_is_base_layer() ((get_highest_layer(default_layer_state) == _BL)  || (get_highest_layer(default_layer_state) == _MBL))
+#define keymap_is_base_layer() ((get_highest_layer(default_layer_state) == _BL) || (get_highest_layer(default_layer_state) == _MBL))
 
 uint32_t post_init_timer = 0x00;
-bool inqbat_flag         = false;
-bool mac_status          = false;
-bool charging_state      = false;
-bool bat_full_flag       = false;
+bool inqbat_flag = false;
+bool mac_status = false;
+bool charging_state = false;
+bool bat_full_flag = false;
 bool enable_bat_indicators = true;
 uint32_t bat_indicator_cnt = true;
 static uint32_t ee_clr_timer = 0;
@@ -88,8 +86,8 @@ uint32_t eeconfig_confinfo_read(void) {
 
 void eeconfig_confinfo_default(void) {
 
-    confinfo.flag             = true;
-    confinfo.record_channel   = 0;
+    confinfo.flag = true;
+    confinfo.record_channel = 0;
     confinfo.record_last_mode = 0xff;
     confinfo.last_btdevs = 1;
 #ifdef WIRELESS_ENABLE
@@ -111,7 +109,7 @@ void eeconfig_confinfo_init(void) {
     }
 }
 
-void lpwr_stop_hook_pre(void){
+void lpwr_stop_hook_pre(void) {
 
     gpio_write_pin_low(LED_POWER_EN_PIN);
 
@@ -119,21 +117,20 @@ void lpwr_stop_hook_pre(void){
     gpio_write_pin_low(HS_LED_BOOSTING_PIN);
 #endif
 
-    if (lower_sleep){
+    if (lower_sleep) {
         md_send_devctrl(MD_SND_CMD_DEVCTRL_USB);
         wait_ms(200);
         lpwr_set_sleep_wakeupcd(LPWR_WAKEUP_UART);
     }
 }
 
-void lpwr_wakeup_hook(void){
-    hs_mode_scan(false,confinfo.devs,confinfo.last_btdevs);
+void lpwr_wakeup_hook(void) {
+    hs_mode_scan(false, confinfo.devs, confinfo.last_btdevs);
 
     gpio_write_pin_high(LED_POWER_EN_PIN);
 #ifdef HS_LED_BOOSTING_PIN
     gpio_write_pin_high(HS_LED_BOOSTING_PIN);
 #endif
-
 }
 
 void keyboard_post_init_kb(void) {
@@ -154,11 +151,11 @@ void keyboard_post_init_kb(void) {
 #endif
 
 #ifdef MM_BT_DEF_PIN
-    setPinInputHigh(MM_BT_DEF_PIN);
+    gpio_set_pin_input(MM_BT_DEF_PIN);
 #endif
 
 #ifdef MM_2G4_DEF_PIN
-    setPinInputHigh(MM_2G4_DEF_PIN);
+    gpio_set_pin_input(MM_2G4_DEF_PIN);
 #endif
 
 #endif
@@ -169,11 +166,11 @@ void keyboard_post_init_kb(void) {
 #endif
 
 #ifdef HS_BAT_CABLE_PIN
-    setPinInput(HS_BAT_CABLE_PIN);
+    gpio_set_pin_input(HS_BAT_CABLE_PIN);
 #endif
 
 #ifdef BAT_FULL_PIN
-    setPinInputHigh(BAT_FULL_PIN);
+    gpio_set_pin_input(BAT_FULL_PIN);
 #endif
 
 #ifdef WIRELESS_ENABLE
@@ -195,33 +192,32 @@ void keyboard_post_init_kb(void) {
 
 void usb_power_connect(void) {
 
-#    ifdef USB_POWER_EN_PIN
+#ifdef USB_POWER_EN_PIN
     gpio_write_pin_low(USB_POWER_EN_PIN);
-#    endif
+#endif
 }
 
 void usb_power_disconnect(void) {
 
-#    ifdef USB_POWER_EN_PIN
+#ifdef USB_POWER_EN_PIN
     gpio_write_pin_high(USB_POWER_EN_PIN);
-#    endif
+#endif
 }
 
 void suspend_power_down_kb(void) {
 
-#    ifdef LED_POWER_EN_PIN
+#ifdef LED_POWER_EN_PIN
     gpio_write_pin_low(LED_POWER_EN_PIN);
-#    endif
+#endif
 
     suspend_power_down_user();
-
 }
 
 void suspend_wakeup_init_kb(void) {
 
-#    ifdef LED_POWER_EN_PIN
+#ifdef LED_POWER_EN_PIN
     gpio_write_pin_high(LED_POWER_EN_PIN);
-#    endif
+#endif
 
     wireless_devs_change(wireless_get_current_devs(), wireless_get_current_devs(), false);
     suspend_wakeup_init_user();
@@ -247,116 +243,116 @@ void wireless_post_task(void) {
         wireless_devs_change(!confinfo.devs, confinfo.devs, false);
         post_init_timer = 0x00;
     }
-    hs_mode_scan(false,confinfo.devs,confinfo.last_btdevs);
+    hs_mode_scan(false, confinfo.devs, confinfo.last_btdevs);
 }
 
 uint32_t wls_process_long_press(uint32_t trigger_time, void *cb_arg) {
     uint16_t keycode = *((uint16_t *)cb_arg);
 
     switch (keycode) {
-        case KC_BT1: {
-            uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
-                wireless_devs_change(wireless_get_current_devs(), DEVS_BT1, true);
-            }
-        } break;
-        case KC_BT2: {
-            uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
-                wireless_devs_change(wireless_get_current_devs(), DEVS_BT2, true);
-            }
-        } break;
-        case KC_BT3: {
-             uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
-                wireless_devs_change(wireless_get_current_devs(), DEVS_BT3, true);
-            }
-        } break;
-        case KC_2G4: {
-             uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_2g4) || (mode == hs_wireless) || (mode == hs_none)) {
-                wireless_devs_change(wireless_get_current_devs(), DEVS_2G4, true);
-            }
-        } break;
-        case EE_CLR: {
+    case KC_BT1: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
+            wireless_devs_change(wireless_get_current_devs(), DEVS_BT1, true);
+        }
+    } break;
+    case KC_BT2: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
+            wireless_devs_change(wireless_get_current_devs(), DEVS_BT2, true);
+        }
+    } break;
+    case KC_BT3: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
+            wireless_devs_change(wireless_get_current_devs(), DEVS_BT3, true);
+        }
+    } break;
+    case KC_2G4: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_2g4) || (mode == hs_wireless) || (mode == hs_none)) {
+            wireless_devs_change(wireless_get_current_devs(), DEVS_2G4, true);
+        }
+    } break;
+    case EE_CLR: {
 
-        } break;
-        default:
-            break;
+    } break;
+    default:
+        break;
     }
 
     return 0;
 }
 
 bool process_record_wls(uint16_t keycode, keyrecord_t *record) {
-    static uint16_t keycode_shadow                     = 0x00;
+    static uint16_t keycode_shadow = 0x00;
     static deferred_token wls_process_long_press_token = INVALID_DEFERRED_TOKEN;
 
     keycode_shadow = keycode;
 
-#    ifndef WLS_KEYCODE_PAIR_TIME
-#        define WLS_KEYCODE_PAIR_TIME 3000
-#    endif
+#ifndef WLS_KEYCODE_PAIR_TIME
+#define WLS_KEYCODE_PAIR_TIME 3000
+#endif
 
-	#    define WLS_KEYCODE_EXEC(wls_dev)                                                                                      \
-        do {                                                                                                                   \
-            if (record->event.pressed) {                                                                                       \
-                if (wireless_get_current_devs() != wls_dev)                                                                    \
-                    wireless_devs_change(wireless_get_current_devs(), wls_dev, false);                                         \
-                if (wls_process_long_press_token == INVALID_DEFERRED_TOKEN) {                                                  \
-                    wls_process_long_press_token = defer_exec(WLS_KEYCODE_PAIR_TIME, wls_process_long_press, &keycode_shadow); \
-                }                                                                                                              \
-            } else {                                                                                                           \
-                cancel_deferred_exec(wls_process_long_press_token);                                                            \
-                wls_process_long_press_token = INVALID_DEFERRED_TOKEN;                                                         \
-            }                                                                                                                  \
-        } while (false)
+#define WLS_KEYCODE_EXEC(wls_dev)                                                                                          \
+    do {                                                                                                                   \
+        if (record->event.pressed) {                                                                                       \
+            if (wireless_get_current_devs() != wls_dev)                                                                    \
+                wireless_devs_change(wireless_get_current_devs(), wls_dev, false);                                         \
+            if (wls_process_long_press_token == INVALID_DEFERRED_TOKEN) {                                                  \
+                wls_process_long_press_token = defer_exec(WLS_KEYCODE_PAIR_TIME, wls_process_long_press, &keycode_shadow); \
+            }                                                                                                              \
+        } else {                                                                                                           \
+            cancel_deferred_exec(wls_process_long_press_token);                                                            \
+            wls_process_long_press_token = INVALID_DEFERRED_TOKEN;                                                         \
+        }                                                                                                                  \
+    } while (false)
 
     switch (keycode) {
-        case KC_BT1: {
-            uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
-                WLS_KEYCODE_EXEC(DEVS_BT1);
-                hs_rgb_blink_set_timer(timer_read32());
-            }
+    case KC_BT1: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
+            WLS_KEYCODE_EXEC(DEVS_BT1);
+            hs_rgb_blink_set_timer(timer_read32());
+        }
 
-        } break;
-        case KC_BT2: {
-            uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
-                WLS_KEYCODE_EXEC(DEVS_BT2);
-                hs_rgb_blink_set_timer(timer_read32());
-            }
-        } break;
-        case KC_BT3: {
-            uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
-                WLS_KEYCODE_EXEC(DEVS_BT3);
-                hs_rgb_blink_set_timer(timer_read32());
-            }
-        } break;
-        case KC_2G4: {
-            uint8_t mode = confinfo.devs;
-            hs_modeio_detection(true, &mode,confinfo.last_btdevs);
-            if ((mode == hs_2g4) || (mode == hs_wireless) || (mode == hs_none)) {
-                WLS_KEYCODE_EXEC(DEVS_2G4);
-                hs_rgb_blink_set_timer(timer_read32());
-            }
-        } break;
-        case KC_USB: {
-            if (record->event.pressed) {
-                wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
-            }
-        } break;
-        default:
-            return true;
+    } break;
+    case KC_BT2: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
+            WLS_KEYCODE_EXEC(DEVS_BT2);
+            hs_rgb_blink_set_timer(timer_read32());
+        }
+    } break;
+    case KC_BT3: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_bt) || (mode == hs_wireless) || (mode == hs_none)) {
+            WLS_KEYCODE_EXEC(DEVS_BT3);
+            hs_rgb_blink_set_timer(timer_read32());
+        }
+    } break;
+    case KC_2G4: {
+        uint8_t mode = confinfo.devs;
+        hs_modeio_detection(true, &mode, confinfo.last_btdevs);
+        if ((mode == hs_2g4) || (mode == hs_wireless) || (mode == hs_none)) {
+            WLS_KEYCODE_EXEC(DEVS_2G4);
+            hs_rgb_blink_set_timer(timer_read32());
+        }
+    } break;
+    case KC_USB: {
+        if (record->event.pressed) {
+            wireless_devs_change(wireless_get_current_devs(), DEVS_USB, false);
+        }
+    } break;
+    default:
+        return true;
     }
 
     return false;
@@ -370,39 +366,39 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         rgb_matrix_set_color_all(0x00, 0x00, 0x00);
     }
 
-    if (*md_getp_state() == MD_STATE_CONNECTED){
+    if (*md_getp_state() == MD_STATE_CONNECTED) {
         hs_rgb_blink_set_timer(timer_read32());
     }
 
     switch (keycode) {
-        case MO(_FBL):
-        case MO(_FMBL):
-        case MO(_FL):
-        case MO(_MFL): {
-            if (!record->event.pressed && rgbrec_is_started()) {
-                if (no_record_fg == true) {
-                    no_record_fg = false;
-                    rgbrec_register_record(keycode, record);
-                }
-                no_record_fg = true;
+    case MO(_FBL):
+    case MO(_FMBL):
+    case MO(_FL):
+    case MO(_MFL): {
+        if (!record->event.pressed && rgbrec_is_started()) {
+            if (no_record_fg == true) {
+                no_record_fg = false;
+                rgbrec_register_record(keycode, record);
             }
-            break;
+            no_record_fg = true;
         }
-        case RP_END:
-        case RP_P0:
-        case RP_P1:
-        case RP_P2:
-        case RM_NEXT:
-            break;
-        default: {
-            if (rgbrec_is_started()) {
-                if (!IS_QK_MOMENTARY(keycode) && record->event.pressed) {
-                    rgbrec_register_record(keycode, record);
+        break;
+    }
+    case RP_END:
+    case RP_P0:
+    case RP_P1:
+    case RP_P2:
+    case RM_NEXT:
+        break;
+    default: {
+        if (rgbrec_is_started()) {
+            if (!IS_QK_MOMENTARY(keycode) && record->event.pressed) {
+                rgbrec_register_record(keycode, record);
 
-                    return false;
-                }
+                return false;
             }
-        } break;
+        }
+    } break;
     }
 
     if (rgbrec_is_started() && (!(keycode == RP_P0 || keycode == RP_P1 || keycode == RP_P2 || keycode == RP_END || keycode == RM_NEXT || keycode == MO(_FL) || keycode == MO(_MFL)))) {
@@ -422,12 +418,23 @@ void im_rgblight_increase(void) {
         current_mode = (rgb.h == 0 && rgb.s != 0) ? 3 : 9;
 
         switch (rgb.h) {
-            case 40: current_mode = 4; break;
-            case 80: current_mode = 5; break;
-            case 120: current_mode = 6; break;
-            case 160: current_mode = 7; break;
-            case 200: current_mode = 8; break;
-            default: break;
+        case 40:
+            current_mode = 4;
+            break;
+        case 80:
+            current_mode = 5;
+            break;
+        case 120:
+            current_mode = 6;
+            break;
+        case 160:
+            current_mode = 7;
+            break;
+        case 200:
+            current_mode = 8;
+            break;
+        default:
+            break;
         }
     }
 
@@ -442,18 +449,35 @@ void im_rgblight_increase(void) {
     }
 
     switch (current_mode) {
-        case 3:  rgblight_sethsv(0, 255, rgb.v); break;
-        case 4:  rgblight_sethsv(40, 255, rgb.v); break;
-        case 5:  rgblight_sethsv(80, 255, rgb.v); break;
-        case 6:  rgblight_sethsv(120, 255, rgb.v); break;
-        case 7:  rgblight_sethsv(160, 255, rgb.v); break;
-        case 8:  rgblight_sethsv(200, 255, rgb.v); break;
-        case 9:  rgblight_sethsv(0, 0, rgb.v); break;
-        case 0:  rgblight_set_speed(255); break;
-        default: rgblight_set_speed(200); break;
+    case 3:
+        rgblight_sethsv(0, 255, rgb.v);
+        break;
+    case 4:
+        rgblight_sethsv(40, 255, rgb.v);
+        break;
+    case 5:
+        rgblight_sethsv(80, 255, rgb.v);
+        break;
+    case 6:
+        rgblight_sethsv(120, 255, rgb.v);
+        break;
+    case 7:
+        rgblight_sethsv(160, 255, rgb.v);
+        break;
+    case 8:
+        rgblight_sethsv(200, 255, rgb.v);
+        break;
+    case 9:
+        rgblight_sethsv(0, 0, rgb.v);
+        break;
+    case 0:
+        rgblight_set_speed(255);
+        break;
+    default:
+        rgblight_set_speed(200);
+        break;
     }
 }
-
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
@@ -468,293 +492,290 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #endif
 
     switch (keycode) {
-        case KC_FTOG:{
-            if (record->event.pressed)
-            {
-                mac_status = keymap_is_mac_system();
-                if (keymap_is_base_layer()) {
-                    if (mac_status) {
-                        set_single_persistent_default_layer(_FMBL);
-                        layer_move(0);
-                    } else {
-                        set_single_persistent_default_layer(_FBL);
-                        layer_move(0);
-                    }
+    case KC_FTOG: {
+        if (record->event.pressed) {
+            mac_status = keymap_is_mac_system();
+            if (keymap_is_base_layer()) {
+                if (mac_status) {
+                    set_single_persistent_default_layer(_FMBL);
+                    layer_move(0);
                 } else {
-                    if (mac_status) {
-                        set_single_persistent_default_layer(_MBL);
-                        layer_move(0);
-                    } else {
-                        set_single_persistent_default_layer(_BL);
-                        layer_move(0);
-                    }
+                    set_single_persistent_default_layer(_FBL);
+                    layer_move(0);
                 }
-            }
-            return false;
-            break;
-        }
-        case KC_TILD:{
-            if (record->event.pressed){
-                register_code(KC_LSFT);
-                register_code(KC_GRV);
-            }else{
-                unregister_code(KC_LSFT);
-                unregister_code(KC_GRV);
-            }
-            return false;
-            break;
-        }
-        case QK_BOOT: {
-            if (record->event.pressed) {
-                dprintf("into boot!!!\r\n");
-                eeconfig_disable();
-                bootloader_jump();
-            }
-        } break;
-        case KC_TEST: {
-            if (rgbrec_is_started()) {
-
-                return false;
-            }
-            if (record->event.pressed) {
-                test_white_light_flag = true;
-            }
-            return false;
-        } break;
-        case NK_TOGG: {
-            if (rgbrec_is_started()) {
-
-                return false;
-            }
-            if (record->event.pressed) {
-                rgb_matrix_hs_indicator_set(0xFF, (RGB){0x00, 0x6E, 0x00}, 250, 1);
-            }
-        } break;
-        case RL_MOD: {
-            if (rgbrec_is_started()) {
-
-                return false;
-            }
-            if (record->event.pressed) {
-                im_rgblight_increase();
-            }
-
-            return false;
-        } break;
-        case EE_CLR: {
-            if (record->event.pressed) {
-                ee_clr_timer = timer_read32();
             } else {
-                ee_clr_timer = 0;
-            }
-
-            return false;
-        } break;
-        case RM_SPDU: {
-            if (record->event.pressed) {
-                if (rgb_matrix_get_speed() >= (RGB_MATRIX_SPD_STEP * 5)) {
-                    rgb_blink_dir();
-                }
-            }
-        } break;
-        case RM_SPDD: {
-            if (record->event.pressed) {
-                if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
-                    rgb_blink_dir();
-                    rgb_matrix_set_speed(RGB_MATRIX_SPD_STEP);
-
-                    return false;
-                }
-            }
-        } break;
-        case RM_VALU: {
-            if (record->event.pressed) {
-                if (rgb_matrix_get_val() >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
-                    rgb_blink_dir();
-                    start_hsv.v = RGB_MATRIX_MAXIMUM_BRIGHTNESS;
-                }
-                else{
-                    start_hsv.v = rgb_matrix_get_val() + RGB_MATRIX_VAL_STEP;
-                }
-            }
-        } break;
-        case RM_VALD: {
-            if (record->event.pressed) {
-                if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
-                    rgb_blink_dir();
-                    for(uint8_t i = 0; i < RGB_MATRIX_LED_COUNT - RGBLED_NUM;i++){
-                        rgb_matrix_set_color(i,0,0,0);
-                    }
-                    start_hsv.v = 0;
-                }
-                else{
-                    start_hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
-                }
-            }
-        } break;
-        case TO(_BL): {
-            if (record->event.pressed) {
-                rgb_matrix_hs_set_remain_time(HS_RGB_BLINK_INDEX_MAC, 0);
-                rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_WIN, (RGB){RGB_WHITE}, 250, 3);
-                if (keymap_is_mac_system()) {
+                if (mac_status) {
+                    set_single_persistent_default_layer(_MBL);
+                    layer_move(0);
+                } else {
                     set_single_persistent_default_layer(_BL);
                     layer_move(0);
                 }
             }
+        }
+        return false;
+        break;
+    }
+    case KC_TILD: {
+        if (record->event.pressed) {
+            register_code(KC_LSFT);
+            register_code(KC_GRV);
+        } else {
+            unregister_code(KC_LSFT);
+            unregister_code(KC_GRV);
+        }
+        return false;
+        break;
+    }
+    case QK_BOOT: {
+        if (record->event.pressed) {
+            dprintf("into boot!!!\r\n");
+            eeconfig_disable();
+            bootloader_jump();
+        }
+    } break;
+    case KC_TEST: {
+        if (rgbrec_is_started()) {
 
             return false;
-        } break;
-        case TO(_MBL): {
-            if (record->event.pressed) {
-                rgb_matrix_hs_set_remain_time(HS_RGB_BLINK_INDEX_WIN, 0);
-                rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_MAC, (RGB){RGB_WHITE}, 250, 3);
-                if (!keymap_is_mac_system()) {
-                    set_single_persistent_default_layer(_MBL);
-                    layer_move(0);
-                }
-            }
+        }
+        if (record->event.pressed) {
+            test_white_light_flag = true;
+        }
+        return false;
+    } break;
+    case NK_TOGG: {
+        if (rgbrec_is_started()) {
 
             return false;
-        } break;
-        case TO(_FBL): {
-            if (record->event.pressed) {
-                rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_WIN, (RGB){RGB_WHITE}, 250, 3);
-                if (keymap_is_mac_system()) {
-                    set_single_persistent_default_layer(_FBL);
-                    layer_move(0);
-                }
-            }
+        }
+        if (record->event.pressed) {
+            rgb_matrix_hs_indicator_set(0xFF, (RGB){0x00, 0x6E, 0x00}, 250, 1);
+        }
+    } break;
+    case RL_MOD: {
+        if (rgbrec_is_started()) {
+
             return false;
-        } break;
-        case TO(_FMBL): {
-            if (record->event.pressed) {
-                rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_MAC, (RGB){RGB_WHITE}, 250, 3);
-                if (!keymap_is_mac_system()) {
-                    set_single_persistent_default_layer(_FMBL);
-                    layer_move(0);
-                }
+        }
+        if (record->event.pressed) {
+            im_rgblight_increase();
+        }
+
+        return false;
+    } break;
+    case EE_CLR: {
+        if (record->event.pressed) {
+            ee_clr_timer = timer_read32();
+        } else {
+            ee_clr_timer = 0;
+        }
+
+        return false;
+    } break;
+    case RM_SPDU: {
+        if (record->event.pressed) {
+            if (rgb_matrix_get_speed() >= (RGB_MATRIX_SPD_STEP * 5)) {
+                rgb_blink_dir();
             }
-            return false;
-        } break;
-        case RP_P0: {
-            if (record->event.pressed) {
-                confinfo.record_channel = 0;
-                rgbrec_read_current_channel(confinfo.record_channel);
+        }
+    } break;
+    case RM_SPDD: {
+        if (record->event.pressed) {
+            if (rgb_matrix_get_speed() <= RGB_MATRIX_SPD_STEP) {
+                rgb_blink_dir();
+                rgb_matrix_set_speed(RGB_MATRIX_SPD_STEP);
+
+                return false;
+            }
+        }
+    } break;
+    case RM_VALU: {
+        if (record->event.pressed) {
+            if (rgb_matrix_get_val() >= (RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP)) {
+                rgb_blink_dir();
+                start_hsv.v = RGB_MATRIX_MAXIMUM_BRIGHTNESS;
+            } else {
+                start_hsv.v = rgb_matrix_get_val() + RGB_MATRIX_VAL_STEP;
+            }
+        }
+    } break;
+    case RM_VALD: {
+        if (record->event.pressed) {
+            if (rgb_matrix_get_val() <= RGB_MATRIX_VAL_STEP) {
+                rgb_blink_dir();
+                for (uint8_t i = 0; i < RGB_MATRIX_LED_COUNT - RGBLED_NUM; i++) {
+                    rgb_matrix_set_color(i, 0, 0, 0);
+                }
+                start_hsv.v = 0;
+            } else {
+                start_hsv.v = rgb_matrix_get_val() - RGB_MATRIX_VAL_STEP;
+            }
+        }
+    } break;
+    case TO(_BL): {
+        if (record->event.pressed) {
+            rgb_matrix_hs_set_remain_time(HS_RGB_BLINK_INDEX_MAC, 0);
+            rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_WIN, (RGB){RGB_WHITE}, 250, 3);
+            if (keymap_is_mac_system()) {
+                set_single_persistent_default_layer(_BL);
+                layer_move(0);
+            }
+        }
+
+        return false;
+    } break;
+    case TO(_MBL): {
+        if (record->event.pressed) {
+            rgb_matrix_hs_set_remain_time(HS_RGB_BLINK_INDEX_WIN, 0);
+            rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_MAC, (RGB){RGB_WHITE}, 250, 3);
+            if (!keymap_is_mac_system()) {
+                set_single_persistent_default_layer(_MBL);
+                layer_move(0);
+            }
+        }
+
+        return false;
+    } break;
+    case TO(_FBL): {
+        if (record->event.pressed) {
+            rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_WIN, (RGB){RGB_WHITE}, 250, 3);
+            if (keymap_is_mac_system()) {
+                set_single_persistent_default_layer(_FBL);
+                layer_move(0);
+            }
+        }
+        return false;
+    } break;
+    case TO(_FMBL): {
+        if (record->event.pressed) {
+            rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_MAC, (RGB){RGB_WHITE}, 250, 3);
+            if (!keymap_is_mac_system()) {
+                set_single_persistent_default_layer(_FMBL);
+                layer_move(0);
+            }
+        }
+        return false;
+    } break;
+    case RP_P0: {
+        if (record->event.pressed) {
+            confinfo.record_channel = 0;
+            rgbrec_read_current_channel(confinfo.record_channel);
+            rgbrec_end(confinfo.record_channel);
+            eeconfig_confinfo_update(confinfo.raw);
+            rgbrec_show(confinfo.record_channel);
+            dprintf("confinfo.record_last_mode = %d\r\n", confinfo.record_last_mode);
+        }
+
+        return false;
+    } break;
+    case RP_P1: {
+        if (record->event.pressed) {
+            confinfo.record_channel = 1;
+            rgbrec_read_current_channel(confinfo.record_channel);
+            rgbrec_end(confinfo.record_channel);
+            eeconfig_confinfo_update(confinfo.raw);
+            rgbrec_show(confinfo.record_channel);
+        }
+
+        return false;
+    } break;
+    case RP_P2: {
+        if (record->event.pressed) {
+            confinfo.record_channel = 2;
+            rgbrec_read_current_channel(confinfo.record_channel);
+            rgbrec_end(confinfo.record_channel);
+            eeconfig_confinfo_update(confinfo.raw);
+            rgbrec_show(confinfo.record_channel);
+        }
+
+        return false;
+    } break;
+    case RP_END: {
+        if (record->event.pressed) {
+            if (rgb_matrix_get_mode() != RGB_MATRIX_CUSTOM_RGBR_PLAY) {
+
+                return false;
+            }
+            if (!rgbrec_is_started()) {
+                rgbrec_start(confinfo.record_channel);
+                no_record_fg = false;
+                rec_time = timer_read32();
+                rgbrec_set_close_all(HSV_BLACK);
+            } else {
+                rec_time = 0;
                 rgbrec_end(confinfo.record_channel);
-                eeconfig_confinfo_update(confinfo.raw);
-                rgbrec_show(confinfo.record_channel);
-                dprintf("confinfo.record_last_mode = %d\r\n", confinfo.record_last_mode);
             }
+            dprintf("confinfo.record_last_mode = %d\r\n", confinfo.record_last_mode);
+        }
 
-            return false;
-        } break;
-        case RP_P1: {
-            if (record->event.pressed) {
-                confinfo.record_channel = 1;
-                rgbrec_read_current_channel(confinfo.record_channel);
-                rgbrec_end(confinfo.record_channel);
-                eeconfig_confinfo_update(confinfo.raw);
-                rgbrec_show(confinfo.record_channel);
-            }
-
-            return false;
-        } break;
-        case RP_P2: {
-            if (record->event.pressed) {
-                confinfo.record_channel = 2;
-                rgbrec_read_current_channel(confinfo.record_channel);
-                rgbrec_end(confinfo.record_channel);
-                eeconfig_confinfo_update(confinfo.raw);
-                rgbrec_show(confinfo.record_channel);
-            }
-
-            return false;
-        } break;
-        case RP_END: {
-            if (record->event.pressed) {
-                if (rgb_matrix_get_mode() != RGB_MATRIX_CUSTOM_RGBR_PLAY) {
-
-                    return false;
-                }
-                if (!rgbrec_is_started()) {
-                    rgbrec_start(confinfo.record_channel);
-                    no_record_fg = false;
-                    rec_time     = timer_read32();
-                    rgbrec_set_close_all(HSV_BLACK);
-                } else {
-                    rec_time = 0;
+        return false;
+    } break;
+    case RM_NEXT: {
+        if (record->event.pressed) {
+            if (rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_RGBR_PLAY) {
+                if (rgbrec_is_started()) {
+                    rgbrec_read_current_channel(confinfo.record_channel);
                     rgbrec_end(confinfo.record_channel);
+                    no_record_fg = false;
                 }
-                dprintf("confinfo.record_last_mode = %d\r\n", confinfo.record_last_mode);
-            }
-
-            return false;
-        } break;
-        case RM_NEXT: {
-            if (record->event.pressed) {
-                if (rgb_matrix_get_mode() == RGB_MATRIX_CUSTOM_RGBR_PLAY) {
-                    if (rgbrec_is_started()) {
-                        rgbrec_read_current_channel(confinfo.record_channel);
-                        rgbrec_end(confinfo.record_channel);
-                        no_record_fg = false;
-                    }
-                    if (confinfo.record_last_mode != 0xFF)
-                        rgb_matrix_mode(confinfo.record_last_mode);
-                    else
-                        rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
-                    eeconfig_confinfo_update(confinfo.raw);
-                    dprintf("confinfo.record_last_mode = %d\r\n", confinfo.record_last_mode);
-                    start_hsv = rgb_matrix_get_hsv();
-                    return false;
-                }
-                record_rgbmatrix_increase(&(confinfo.record_last_mode));
+                if (confinfo.record_last_mode != 0xFF)
+                    rgb_matrix_mode(confinfo.record_last_mode);
+                else
+                    rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
                 eeconfig_confinfo_update(confinfo.raw);
+                dprintf("confinfo.record_last_mode = %d\r\n", confinfo.record_last_mode);
                 start_hsv = rgb_matrix_get_hsv();
+                return false;
             }
+            record_rgbmatrix_increase(&(confinfo.record_last_mode));
+            eeconfig_confinfo_update(confinfo.raw);
+            start_hsv = rgb_matrix_get_hsv();
+        }
 
-            return false;
-        } break;
-        case RM_HUEU: {
-            if (record->event.pressed) {
-                record_color_hsv(true);
-                start_hsv = rgb_matrix_get_hsv();
-            }
+        return false;
+    } break;
+    case RM_HUEU: {
+        if (record->event.pressed) {
+            record_color_hsv(true);
+            start_hsv = rgb_matrix_get_hsv();
+        }
 
-            return false;
-        } break;
-        case KC_LCMD: {
-            if (keymap_is_mac_system()) {
-                if (keymap_config.no_gui && !rgbrec_is_started()) {
-                    if (record->event.pressed) {
-                        register_code16(KC_LCMD);
-                    } else {
-                        unregister_code16(KC_LCMD);
-                    }
+        return false;
+    } break;
+    case KC_LCMD: {
+        if (keymap_is_mac_system()) {
+            if (keymap_config.no_gui && !rgbrec_is_started()) {
+                if (record->event.pressed) {
+                    register_code16(KC_LCMD);
+                } else {
+                    unregister_code16(KC_LCMD);
                 }
             }
+        }
 
-            return true;
-        } break;
-        case KC_RCMD: {
-            if (keymap_is_mac_system()) {
-                if (keymap_config.no_gui && !rgbrec_is_started()) {
-                    if (record->event.pressed) {
-                        register_code16(KC_RCMD);
-                    } else {
-                        unregister_code16(KC_RCMD);
-                    }
+        return true;
+    } break;
+    case KC_RCMD: {
+        if (keymap_is_mac_system()) {
+            if (keymap_config.no_gui && !rgbrec_is_started()) {
+                if (record->event.pressed) {
+                    register_code16(KC_RCMD);
+                } else {
+                    unregister_code16(KC_RCMD);
                 }
             }
+        }
 
-            return true;
-        } break;
-        case HS_BATQ: {
-            extern bool rk_bat_req_flag;
-            rk_bat_req_flag = (confinfo.devs != DEVS_USB) && record->event.pressed;
-            return false;
-        } break;
-        default:
-            break;
+        return true;
+    } break;
+    case HS_BATQ: {
+        extern bool rk_bat_req_flag;
+        rk_bat_req_flag = (confinfo.devs != DEVS_USB) && record->event.pressed;
+        return false;
+    } break;
+    default:
+        break;
     }
 
     return true;
@@ -765,10 +786,9 @@ void housekeeping_task_user(void) {
     static uint32_t hs_current_time;
     static bool val_value = false;
 
-    charging_state = readPin(HS_BAT_CABLE_PIN);
+    charging_state = gpio_read_pin(HS_BAT_CABLE_PIN);
 
-    bat_full_flag = readPin(BAT_FULL_PIN);
-
+    bat_full_flag = gpio_read_pin(BAT_FULL_PIN);
 
     if (charging_state && (bat_full_flag)) {
         hs_now_mode = MD_SND_CMD_DEVCTRL_CHARGING_DONE;
@@ -785,89 +805,88 @@ void housekeeping_task_user(void) {
         md_send_devctrl(MD_SND_CMD_DEVCTRL_INQVOL);
     }
 
-    if (charging_state){
+    if (charging_state) {
 #ifdef HS_LED_BOOSTING_PIN
-         writePin(HS_LED_BOOSTING_PIN,0);
+        gpio_write_pin(HS_LED_BOOSTING_PIN, 0);
 #endif
-         if(!val_value){
-            rgb_matrix_sethsv_noeeprom(start_hsv.h,start_hsv.s,150);
-         }
-         val_value = true;
+        if (!val_value) {
+            rgb_matrix_sethsv_noeeprom(start_hsv.h, start_hsv.s, 150);
+        }
+        val_value = true;
 
-    }
-    else{
+    } else {
 #ifdef HS_LED_BOOSTING_PIN
-        writePin(HS_LED_BOOSTING_PIN,1);
+        gpio_write_pin(HS_LED_BOOSTING_PIN, 1);
 #endif
-        if(val_value){
-            rgb_matrix_sethsv(start_hsv.h,start_hsv.s,start_hsv.v);
+        if (val_value) {
+            rgb_matrix_sethsv(start_hsv.h, start_hsv.s, start_hsv.v);
         }
         val_value = false;
     }
-
 }
 
 #ifdef RGB_MATRIX_ENABLE
 
-#    ifdef WIRELESS_ENABLE
-bool wls_rgb_indicator_reset        = false;
-uint32_t wls_rgb_indicator_timer    = 0x00;
+#ifdef WIRELESS_ENABLE
+bool wls_rgb_indicator_reset = false;
+uint32_t wls_rgb_indicator_timer = 0x00;
 uint32_t wls_rgb_indicator_interval = 0;
-uint32_t wls_rgb_indicator_times    = 0;
-uint32_t wls_rgb_indicator_index    = 0;
-RGB wls_rgb_indicator_rgb           = {0};
+uint32_t wls_rgb_indicator_times = 0;
+uint32_t wls_rgb_indicator_index = 0;
+RGB wls_rgb_indicator_rgb = {0};
 
 void rgb_matrix_wls_indicator_set(uint8_t index, RGB rgb, uint32_t interval, uint8_t times) {
 
     wls_rgb_indicator_timer = timer_read32();
 
-    wls_rgb_indicator_index    = index;
+    wls_rgb_indicator_index = index;
     wls_rgb_indicator_interval = interval;
-    wls_rgb_indicator_times    = times * 2;
-    wls_rgb_indicator_rgb      = rgb;
+    wls_rgb_indicator_times = times * 2;
+    wls_rgb_indicator_rgb = rgb;
 }
 
 void wireless_devs_change_kb(uint8_t old_devs, uint8_t new_devs, bool reset) {
 
     wls_rgb_indicator_reset = reset;
 
-	if (confinfo.devs != wireless_get_current_devs()) {
+    if (confinfo.devs != wireless_get_current_devs()) {
         confinfo.devs = wireless_get_current_devs();
-        if (confinfo.devs > 0 && confinfo.devs < 4) confinfo.last_btdevs = confinfo.devs;
+        if (confinfo.devs > 0 && confinfo.devs < 4)
+            confinfo.last_btdevs = confinfo.devs;
         eeconfig_confinfo_update(confinfo.raw);
     }
 
     switch (new_devs) {
-        case DEVS_BT1: {
-            if (reset) {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT1, (RGB){HS_LBACK_COLOR_BT1}, 200, 1);
-            } else {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT1, (RGB){HS_PAIR_COLOR_BT1}, 500, 1);
-            }
-        } break;
-        case DEVS_BT2: {
-            if (reset) {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT2, (RGB){HS_LBACK_COLOR_BT2}, 200, 1);
-            } else {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT2, (RGB){HS_PAIR_COLOR_BT2}, 500, 1);
-            }
-        } break;
-        case DEVS_BT3: {
-            if (reset) {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT3, (RGB){HS_LBACK_COLOR_BT3}, 200, 1);
-            } else {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT3, (RGB){HS_PAIR_COLOR_BT3}, 500, 1);
-            }
-        } break;
-        case DEVS_2G4: {
-            if (reset) {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_2G4, (RGB){HS_LBACK_COLOR_2G4}, 200, 1);
-            } else {
-                rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_2G4, (RGB){HS_LBACK_COLOR_2G4}, 500, 1);
-            }
-        } break;
-        default:
-            break;
+    case DEVS_BT1: {
+        if (reset) {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT1, (RGB){HS_LBACK_COLOR_BT1}, 200, 1);
+        } else {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT1, (RGB){HS_PAIR_COLOR_BT1}, 500, 1);
+        }
+    } break;
+    case DEVS_BT2: {
+        if (reset) {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT2, (RGB){HS_LBACK_COLOR_BT2}, 200, 1);
+        } else {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT2, (RGB){HS_PAIR_COLOR_BT2}, 500, 1);
+        }
+    } break;
+    case DEVS_BT3: {
+        if (reset) {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT3, (RGB){HS_LBACK_COLOR_BT3}, 200, 1);
+        } else {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_BT3, (RGB){HS_PAIR_COLOR_BT3}, 500, 1);
+        }
+    } break;
+    case DEVS_2G4: {
+        if (reset) {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_2G4, (RGB){HS_LBACK_COLOR_2G4}, 200, 1);
+        } else {
+            rgb_matrix_wls_indicator_set(HS_RGB_BLINK_INDEX_2G4, (RGB){HS_LBACK_COLOR_2G4}, 500, 1);
+        }
+    } break;
+    default:
+        break;
     }
 }
 
@@ -980,7 +999,7 @@ void bat_indicators(void) {
     }
 }
 
-#    endif
+#endif
 
 #endif
 
@@ -994,7 +1013,7 @@ void rgb_blink_dir(void) {
 
 bool hs_reset_settings_user(void) {
 
-    rgb_matrix_hs_indicator_set(0xFF, (RGB){WIITE_B,WIITE_B,WIITE_B}, 250, 3);
+    rgb_matrix_hs_indicator_set(0xFF, (RGB){WIITE_B, WIITE_B, WIITE_B}, 250, 3);
 
     return true;
 }
@@ -1015,12 +1034,12 @@ void rgb_matrix_hs_indicator_set(uint8_t index, RGB rgb, uint32_t interval, uint
 
     for (int i = 0; i < HS_RGB_INDICATOR_COUNT; i++) {
         if (!hs_rgb_indicators[i].active) {
-            hs_rgb_indicators[i].active   = true;
-            hs_rgb_indicators[i].timer    = timer_read32();
+            hs_rgb_indicators[i].active = true;
+            hs_rgb_indicators[i].timer = timer_read32();
             hs_rgb_indicators[i].interval = interval;
-            hs_rgb_indicators[i].times    = times * 2;
-            hs_rgb_indicators[i].index    = index;
-            hs_rgb_indicators[i].rgb      = rgb;
+            hs_rgb_indicators[i].times = times * 2;
+            hs_rgb_indicators[i].index = index;
+            hs_rgb_indicators[i].rgb = rgb;
             if (index != 0xFF)
                 hs_rgb_indicators[i].blink_cb = NULL;
             else {
@@ -1035,7 +1054,7 @@ void rgb_matrix_hs_set_remain_time(uint8_t index, uint8_t remain_time) {
 
     for (int i = 0; i < HS_RGB_INDICATOR_COUNT; i++) {
         if (hs_rgb_indicators[i].index == index) {
-            hs_rgb_indicators[i].times  = 0;
+            hs_rgb_indicators[i].times = 0;
             hs_rgb_indicators[i].active = false;
             break;
         }
@@ -1055,7 +1074,7 @@ void rgb_matrix_hs_indicator(void) {
 
                 if (hs_rgb_indicators[i].times <= 0) {
                     hs_rgb_indicators[i].active = false;
-                    hs_rgb_indicators[i].timer  = 0x00;
+                    hs_rgb_indicators[i].timer = 0x00;
                     if (hs_rgb_indicators[i].blink_cb != NULL)
                         hs_rgb_indicators[i].blink_cb(i);
                     continue;
@@ -1123,8 +1142,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         ee_clr_timer = 0;
     }
 
-    if ((*md_getp_state() == MD_STATE_CONNECTED) || USB_DRIVER.state == USB_ACTIVE)
-    {
+    if ((*md_getp_state() == MD_STATE_CONNECTED) || USB_DRIVER.state == USB_ACTIVE) {
         if (host_keyboard_led_state().caps_lock)
             rgb_matrix_set_color(HS_RGB_INDEX_CAPS, RGB_WHITE);
 
@@ -1139,7 +1157,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 #endif
 
-    #    ifdef WIRELESS_ENABLE
+#ifdef WIRELESS_ENABLE
     rgb_matrix_wls_indicator();
 
     if (enable_bat_indicators && !inqbat_flag && !rgbrec_is_started()) {
@@ -1149,21 +1167,21 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     }
 
     if (!enable_bat_indicators) {
-        if (timer_elapsed32(bat_indicator_cnt) > 2000){
+        if (timer_elapsed32(bat_indicator_cnt) > 2000) {
             enable_bat_indicators = true;
             bat_indicator_cnt = timer_read32();
         }
     }
 
-    if (confinfo.devs == DEVS_USB){
+    if (confinfo.devs == DEVS_USB) {
         if (USB_DRIVER.state != USB_ACTIVE) {
-            if(enable_bat_indicators){
+            if (enable_bat_indicators) {
                 rgb_matrix_hs_indicator_set(HS_RGB_BLINK_INDEX_USB, (RGB){HS_LBACK_COLOR_USB}, 500, 1);
             }
         }
     }
 
-#    endif
+#endif
 
     rgb_matrix_hs_indicator();
 
