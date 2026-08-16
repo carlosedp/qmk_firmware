@@ -274,7 +274,7 @@ void es_chibios_user_idle_loop_hook(void) {
     Led_Power_Up           = false;
 
     ioline_t User_Pin_Tab_Col[MATRIX_COLS] = MATRIX_COL_PINS;
-    ioline_t User_Pin_Tab_Rol[MATRIX_ROWS] = MATRIX_ROW_PINS;
+    ioline_t User_Pin_Tab_Row[MATRIX_ROWS] = MATRIX_ROW_PINS;
 
     // 唤醒源配置
     for (i = 0; i < MATRIX_COLS; i++) { // COL
@@ -282,8 +282,8 @@ void es_chibios_user_idle_loop_hook(void) {
         gpio_write_pin_low(User_Pin_Tab_Col[i]);
     }
 
-    for (i = 0; i < MATRIX_ROWS; i++) { // ROL
-        gpio_set_pin_input_high(User_Pin_Tab_Rol[i]);
+    for (i = 0; i < MATRIX_ROWS; i++) { // ROW
+        gpio_set_pin_input_high(User_Pin_Tab_Row[i]);
     }
 
     gpio_set_pin_input(ES_USB_POWER_IO);
@@ -370,8 +370,8 @@ void es_chibios_user_idle_loop_hook(void) {
 
     /*休眠唤醒之后记录唤醒按下按键的位置*/
     uint8_t Sleep_Status = 0x00;
-    for (i = 0; i < MATRIX_ROWS; i++) { // ROL
-        if (!gpio_read_pin(User_Pin_Tab_Rol[i])) {
+    for (i = 0; i < MATRIX_ROWS; i++) { // ROW
+        if (!gpio_read_pin(User_Pin_Tab_Row[i])) {
             Sleep_Status |= (1 << i);
         }
     }
@@ -390,7 +390,7 @@ void es_chibios_user_idle_loop_hook(void) {
     while (delay--)
         ;
 
-    uint8_t Rol_Count = 0, Col_Count = 0;
+    uint8_t Row_Count = 0, Col_Count = 0;
     for (i = 0; i < MATRIX_ROWS; i++) {
         if ((1 << i) & Sleep_Status) {
             for (uint8_t j = 0; j < MATRIX_COLS; j++) {
@@ -400,8 +400,8 @@ void es_chibios_user_idle_loop_hook(void) {
                 while (delay--)
                     ;
 
-                if (!gpio_read_pin(User_Pin_Tab_Rol[i])) {
-                    Rol_Count = i;
+                if (!gpio_read_pin(User_Pin_Tab_Row[i])) {
+                    Row_Count = i;
                     Col_Count = j;
                     break;
                 }
@@ -440,9 +440,12 @@ void es_chibios_user_idle_loop_hook(void) {
             }
         }
 
-        register_code(dynamic_keymap_get_keycode(0, Rol_Count, Col_Count));
+        keypos_t pos = {.col = Col_Count, .row = Row_Count};
+        uint16_t keycode = keymap_key_to_keycode(0, pos);
+
+        register_code(keycode);
         wait_ms(2);
-        unregister_code(dynamic_keymap_get_keycode(0, Rol_Count, Col_Count));
+        unregister_code(keycode);
         wait_ms(2);
     }
 
@@ -589,4 +592,3 @@ void Check_Mode_Switch_Changed(void) {}
 void Debug_Mode_Switch_Position(void) {}
 
 #endif /* HAS_MODE_SWITCH */
-
