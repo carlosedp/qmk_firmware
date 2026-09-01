@@ -15,9 +15,9 @@ RGB_MATRIX_EFFECT(IDLE_RIPPLE)
  *   X ≈ 0..224
  *   Y ≈ 10..60
  *
- * Center:
- *   X = 112
- *   Y = 40
+ * Geometry/timing constants (TH85_RIPPLE_*) live in config.h since
+ * keymap.c's logo/side sync needs the same values and is a separate
+ * translation unit from this file.
  *
  * LEDs 0..83:
  *   Keyboard keys
@@ -28,30 +28,6 @@ RGB_MATRIX_EFFECT(IDLE_RIPPLE)
  * LEDs 92..129:
  *   Side strip
  */
-
-
-/* ------------------------------------------------------------
- * Ripple geometry
- * ------------------------------------------------------------ */
-
-#define TH85_RIPPLE_CENTER_X       112
-#define TH85_RIPPLE_CENTER_Y        40
-
-#define TH85_RIPPLE_MAX_RADIUS     120
-
-/*
- * Half the cycle, giving two equally spaced waves.
- */
-#define TH85_RIPPLE_SEPARATION      60
-
-
-/* ------------------------------------------------------------
- * Animation
- * ------------------------------------------------------------ */
-
-#define TH85_RIPPLE_FRAME_MS        25
-#define TH85_RIPPLE_STEP              3
-#define TH85_RIPPLE_WIDTH            10
 
 
 /* ------------------------------------------------------------
@@ -75,8 +51,10 @@ static uint16_t th85_ripple_distance(uint8_t led_index) {
         TH85_RIPPLE_CENTER_X;
 
     int16_t dy =
-        (int16_t)g_led_config.point[led_index].y -
-        TH85_RIPPLE_CENTER_Y;
+        (
+            (int16_t)g_led_config.point[led_index].y -
+            TH85_RIPPLE_CENTER_Y
+        ) * TH85_RIPPLE_Y_SCALE;
 
     uint16_t distance_squared =
         (uint16_t)(
@@ -148,8 +126,23 @@ static bool IDLE_RIPPLE(effect_params_t *params) {
 
         th85_ripple_timer = g_rgb_timer;
 
+        /*
+         * Scale the per-frame step by VIA's Backlight "Effect Speed"
+         * slider (id_qmk_rgb_matrix_effect_speed, 0..255, default 128)
+         * so it actually controls this effect's speed. 128 keeps the
+         * original TH85_RIPPLE_STEP pace; 0 is clamped to a minimum of
+         * 1 so the animation never fully freezes.
+         */
+        uint8_t  rgb_speed    = rgb_matrix_get_speed();
+        uint16_t scaled_step =
+            ((uint16_t)TH85_RIPPLE_STEP * rgb_speed) / 128;
+
+        if (scaled_step == 0) {
+            scaled_step = 1;
+        }
+
         th85_ripple_radius +=
-            TH85_RIPPLE_STEP;
+            scaled_step;
 
         /*
          * Start a new cycle once the first wave reaches

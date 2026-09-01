@@ -35,17 +35,10 @@
 
 /* ============================================================
  * Ripple configuration
+ *
+ * TH85_RIPPLE_* geometry/timing constants now live in config.h
+ * (single source of truth shared with rgb_matrix_user.inc).
  * ============================================================ */
-
-#define TH85_RIPPLE_CENTER_X       112
-#define TH85_RIPPLE_CENTER_Y        40
-
-#define TH85_RIPPLE_MAX_RADIUS     120
-#define TH85_RIPPLE_SEPARATION      60
-
-#define TH85_RIPPLE_FRAME_MS        25
-#define TH85_RIPPLE_STEP             3
-#define TH85_RIPPLE_WIDTH           10
 
 
 /* ============================================================
@@ -76,6 +69,14 @@ static bool th85_has_activity = false;
  */
 uint16_t th85_ripple_radius = 0;
 uint32_t th85_ripple_timer = 0;
+
+/*
+ * Forward declarations: defined further down, but needed by
+ * housekeeping_task_user() which now calls them (see the comment
+ * there for why they moved out of rgb_matrix_indicators_advanced_user).
+ */
+static void th85_zone_reactive_flash(void);
+static void th85_zone_idle_ripple(void);
 
 
 /* ============================================================
@@ -160,6 +161,26 @@ bool process_record_user(
  * ============================================================ */
 
 void housekeeping_task_user(void) {
+
+    /*
+     * Sync the logo/side zones here, not from
+     * rgb_matrix_indicators_advanced_user(). That callback runs from
+     * rgb_matrix_task(), which the main loop calls *before*
+     * housekeeping_task() -> housekeeping_task_kb() ->
+     * Logo_Led_Update()/Side_Led_Update() (see kb_housekeeping_task()
+     * in lib/rdmctmzt_common/keyboard_common.c, which runs
+     * unconditionally every tick). Setting the ripple/reactive colors
+     * before that zone update meant it was immediately painted over
+     * in the same tick and never actually visible. Running it here,
+     * after housekeeping_task_kb() in the same tick, makes it win.
+     */
+#if LOGO_LED_ENABLE || SIDE_LED_ENABLE
+    if (th85_rgb_idle) {
+        th85_zone_idle_ripple();
+    } else {
+        th85_zone_reactive_flash();
+    }
+#endif
 
     if (!rgb_matrix_is_enabled()) {
         return;
@@ -552,42 +573,18 @@ static void th85_zone_idle_ripple(void) {
  * RGB indicator callback
  * ============================================================
  *
- * This is intentionally in the keymap.
- *
- * th85.c will be changed to call this _user callback after its
- * common indicator processing.
+ * The logo/side sync used to happen here, but this runs too early
+ * in the main loop (see the comment on housekeeping_task_user()
+ * above, where it now lives) to actually be visible. Nothing else
+ * needs this callback right now.
  * ============================================================ */
 
 bool rgb_matrix_indicators_advanced_user(
     uint8_t led_min,
     uint8_t led_max
 ) {
-
-    /*
-     * Let the TH85/common firmware perform its normal
-     * indicators first.
-     */
     (void)led_min;
     (void)led_max;
-
-
-    /*
-     * During idle we want the logo and side strip synchronized
-     * with the concentric ripple.
-     */
-    if (th85_rgb_idle) {
-
-        th85_zone_idle_ripple();
-
-    } else {
-
-        /*
-         * During normal typing the logo and side briefly react
-         * to each key press.
-         */
-        th85_zone_reactive_flash();
-    }
-
 
     return false;
 }
