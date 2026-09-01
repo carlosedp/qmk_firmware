@@ -34,14 +34,6 @@
 
 
 /* ============================================================
- * Ripple configuration
- *
- * TH85_RIPPLE_* geometry/timing constants now live in config.h
- * (single source of truth shared with rgb_matrix_user.inc).
- * ============================================================ */
-
-
-/* ============================================================
  * Logo / side reaction
  * ============================================================ */
 
@@ -63,20 +55,11 @@ static bool th85_has_activity = false;
 
 
 /*
- * These are intentionally global because rgb_matrix_user.inc
- * is compiled as part of rgb_matrix.c and needs the current
- * ripple radius.
+ * Timestamp of the last synthetic "keypress" this file injected into
+ * G (matrix 3,5) to spawn a new splash ring while idle. See
+ * th85_spawn_idle_splash() below.
  */
-uint16_t th85_ripple_radius = 0;
-uint32_t th85_ripple_timer = 0;
-
-/*
- * Forward declarations: defined further down, but needed by
- * housekeeping_task_user() which now calls them (see the comment
- * there for why they moved out of rgb_matrix_indicators_advanced_user).
- */
-static void th85_zone_reactive_flash(void);
-static void th85_zone_idle_ripple(void);
+static uint32_t th85_last_splash = 0;
 
 
 /* ============================================================
@@ -108,9 +91,6 @@ void keyboard_post_init_user(void) {
 
     th85_rgb_idle = false;
     th85_has_activity = false;
-
-    th85_ripple_radius = 0;
-    th85_ripple_timer = g_rgb_timer;
 
     th85_rgb_set_active();
 }
@@ -145,9 +125,6 @@ bool process_record_user(
          * Stop the idle ripple immediately.
          */
         if (th85_rgb_idle) {
-
-            th85_ripple_radius = 0;
-
             th85_rgb_set_active();
         }
     }
@@ -160,29 +137,42 @@ bool process_record_user(
  * Idle detector
  * ============================================================ */
 
+/*
+ * Spawns a new splash ring at G (matrix row 3, col 5 - see th85.c's
+ * matrix/g_led_config, this is the physical middle of the board)
+ * by injecting a synthetic "key release" the exact same way a real
+ * keystroke does (rgb_matrix_handle_key_event() is what
+ * quantum/action.c calls on every real key event). This reuses QMK's
+ * own stock reactive-splash pipeline (last_hit_buffer,
+ * effect_runner_reactive_splash.h) instead of hand-rolled distance
+ * math against g_led_config - the previous custom ripple never
+ * correctly reached the bottom two rows despite two different
+ * distance formulas, so this sidesteps that entirely by using the
+ * exact code path real keypresses already use successfully.
+ *
+ * Whether this call fires as a "press" or "release" is decided by
+ * RGB_MATRIX_KEYRELEASES/RGB_MATRIX_KEYPRESSES in config.h - both are
+ * defined there, and rgb_matrix_handle_key_event() checks
+ * RGB_MATRIX_KEYRELEASES first, so it only records a hit when
+ * pressed=false.
+ */
+static void th85_spawn_idle_splash(void) {
+    rgb_matrix_handle_key_event(3, 5, false);
+}
+
+#define TH85_IDLE_SPLASH_INTERVAL_MS 1500
+
 void housekeeping_task_user(void) {
 
-    /*
-     * Sync the logo/side zones here, not from
-     * rgb_matrix_indicators_advanced_user(). That callback runs from
-     * rgb_matrix_task(), which the main loop calls *before*
-     * housekeeping_task() -> housekeeping_task_kb() ->
-     * Logo_Led_Update()/Side_Led_Update() (see kb_housekeeping_task()
-     * in lib/rdmctmzt_common/keyboard_common.c, which runs
-     * unconditionally every tick). Setting the ripple/reactive colors
-     * before that zone update meant it was immediately painted over
-     * in the same tick and never actually visible. Running it here,
-     * after housekeeping_task_kb() in the same tick, makes it win.
-     */
-#if LOGO_LED_ENABLE || SIDE_LED_ENABLE
-    if (th85_rgb_idle) {
-        th85_zone_idle_ripple();
-    } else {
-        th85_zone_reactive_flash();
-    }
-#endif
-
     if (!rgb_matrix_is_enabled()) {
+        return;
+    }
+
+    if (th85_rgb_idle) {
+        if (timer_elapsed32(th85_last_splash) >= TH85_IDLE_SPLASH_INTERVAL_MS) {
+            th85_last_splash = timer_read32();
+            th85_spawn_idle_splash();
+        }
         return;
     }
 
@@ -194,379 +184,21 @@ void housekeeping_task_user(void) {
      * One second after the last keyboard event.
      */
     if (
-        !th85_rgb_idle &&
         timer_elapsed32(th85_last_activity) >=
             TH85_IDLE_DELAY_MS
     ) {
 
         th85_rgb_idle = true;
-
-        th85_ripple_radius = 0;
-        th85_ripple_timer = g_rgb_timer;
+        th85_last_splash = timer_read32();
 
         rgb_matrix_mode_noeeprom(
-            RGB_MATRIX_CUSTOM_IDLE_RIPPLE
+            RGB_MATRIX_SOLID_SPLASH
         );
+
+        th85_spawn_idle_splash();
     }
 }
 
-
-/* ============================================================
- * Helper: set one RGB zone
- * ============================================================ */
-
-static void th85_set_zone_color(
-    uint8_t start,
-    uint8_t count,
-    uint8_t r,
-    uint8_t g,
-    uint8_t b
-) {
-
-    for (uint8_t i = 0; i < count; i++) {
-
-        rgb_matrix_driver_set_color(
-            start + i,
-            r,
-            g,
-            b
-        );
-    }
-}
-
-
-/* ============================================================
- * Helper: convert HSV to RGB with brightness scaling
- * ============================================================ */
-
-static void th85_set_zone_hsv(
-    uint8_t start,
-    uint8_t count,
-    uint8_t hue,
-    uint8_t saturation,
-    uint8_t brightness
-) {
-
-    hsv_t hsv = {
-        .h = hue,
-        .s = saturation,
-        .v = brightness
-    };
-
-    rgb_t rgb =
-        hsv_to_rgb(hsv);
-
-    th85_set_zone_color(
-        start,
-        count,
-        rgb.r,
-        rgb.g,
-        rgb.b
-    );
-}
-
-
-/* ============================================================
- * Zone reaction while typing
- * ============================================================ */
-
-static void th85_zone_reactive_flash(void) {
-
-    uint32_t elapsed =
-        timer_elapsed32(th85_last_keypress);
-
-
-    if (elapsed >= TH85_REACTION_MS) {
-        return;
-    }
-
-
-    /*
-     * Brightness fades from maximum to zero.
-     */
-    uint8_t fade =
-        255 -
-        (
-            (elapsed * 255) /
-            TH85_REACTION_MS
-        );
-
-
-#if LOGO_LED_ENABLE
-
-    if (Keyboard_Info.Logo_On_Off) {
-
-        uint8_t brightness =
-            (
-                (uint16_t)
-                Keyboard_Info.Logo_Brightness *
-                fade
-            ) / 255;
-
-        th85_set_zone_hsv(
-            LED_LOGO_INDEX,
-            LOGO_LED_COUNT,
-            Keyboard_Info.Logo_Hue,
-            Keyboard_Info.Logo_Saturation,
-            brightness
-        );
-    }
-
-#endif
-
-
-#if SIDE_LED_ENABLE
-
-    if (Keyboard_Info.Side_On_Off) {
-
-        uint8_t brightness =
-            (
-                (uint16_t)
-                Keyboard_Info.Side_Brightness *
-                fade
-            ) / 255;
-
-        th85_set_zone_hsv(
-            LED_SIDE_INDEX,
-            SIDE_LED_COUNT,
-            Keyboard_Info.Side_Hue,
-            Keyboard_Info.Side_Saturation,
-            brightness
-        );
-    }
-
-#endif
-}
-
-
-/* ============================================================
- * Zone ripple while idle
- * ============================================================ */
-
-static uint8_t th85_zone_ring_brightness(
-    uint16_t distance,
-    uint16_t radius
-) {
-
-    int16_t difference =
-        (int16_t)distance -
-        (int16_t)radius;
-
-    if (difference < 0) {
-        difference = -difference;
-    }
-
-    if (difference >= TH85_RIPPLE_ZONE_WIDTH) {
-        return 0;
-    }
-
-    return (
-        uint8_t
-    )(
-        255 -
-        (
-            ((uint16_t)difference * 255) /
-            TH85_RIPPLE_ZONE_WIDTH
-        )
-    );
-}
-
-
-/*
- * Draw logo and side strip so they remain synchronized with
- * the exact same two ripple radii as the keyboard.
- */
-static void th85_zone_idle_ripple(void) {
-
-
-    /*
-     * --------------------------------------------------------
-     * LOGO
-     * --------------------------------------------------------
-     *
-     * The logo is physically around the center of the board,
-     * so it responds when a wave passes the center region.
-     */
-#if LOGO_LED_ENABLE
-
-    uint8_t logo_brightness_1 =
-        th85_zone_ring_brightness(
-            18,
-            th85_ripple_radius
-        );
-
-
-    uint16_t logo_radius_2 =
-        th85_ripple_radius +
-        TH85_RIPPLE_SEPARATION;
-
-
-    if (logo_radius_2 > TH85_RIPPLE_MAX_RADIUS) {
-        logo_radius_2 -= TH85_RIPPLE_MAX_RADIUS;
-    }
-
-
-    uint8_t logo_brightness_2 =
-        th85_zone_ring_brightness(
-            18,
-            logo_radius_2
-        );
-
-
-    uint8_t logo_brightness =
-        logo_brightness_1 >
-            logo_brightness_2
-            ? logo_brightness_1
-            : logo_brightness_2;
-
-
-    if (!Keyboard_Info.Logo_On_Off) {
-
-        th85_set_zone_color(
-            LED_LOGO_INDEX,
-            LOGO_LED_COUNT,
-            0,
-            0,
-            0
-        );
-
-    } else {
-
-        uint8_t brightness =
-            (
-                (uint16_t)
-                Keyboard_Info.Logo_Brightness *
-                logo_brightness
-            ) / 255;
-
-        th85_set_zone_hsv(
-            LED_LOGO_INDEX,
-            LOGO_LED_COUNT,
-            Keyboard_Info.Logo_Hue,
-            Keyboard_Info.Logo_Saturation,
-            brightness
-        );
-    }
-
-#endif
-
-
-    /*
-     * --------------------------------------------------------
-     * SIDE STRIP
-     * --------------------------------------------------------
-     *
-     * The 38 LEDs are treated as two mirrored sides:
-     *
-     *   0..18   = left side
-     *   19..37  = right side
-     *
-     * The center LEDs react first and the outer LEDs later,
-     * producing a visual echo of the keyboard ripple.
-     */
-#if SIDE_LED_ENABLE
-
-    if (!Keyboard_Info.Side_On_Off) {
-
-        th85_set_zone_color(
-            LED_SIDE_INDEX,
-            SIDE_LED_COUNT,
-            0,
-            0,
-            0
-        );
-
-    } else {
-
-        hsv_t hsv = {
-            .h = Keyboard_Info.Side_Hue,
-            .s = Keyboard_Info.Side_Saturation,
-            .v = Keyboard_Info.Side_Brightness
-        };
-
-
-        for (uint8_t i = 0; i < SIDE_LED_COUNT; i++) {
-
-            uint8_t local_position;
-
-            if (i < 19) {
-                local_position = i;
-            } else {
-                local_position = i - 19;
-            }
-
-
-            /*
-             * Center of each side = position 9.
-             *
-             * Convert this into a distance roughly matching
-             * the keyboard coordinate system.
-             */
-            uint16_t side_distance =
-                18 +
-                (
-                    (
-                        local_position > 9
-                            ? local_position - 9
-                            : 9 - local_position
-                    ) * 5
-                );
-
-
-            uint8_t brightness_1 =
-                th85_zone_ring_brightness(
-                    side_distance,
-                    th85_ripple_radius
-                );
-
-
-            uint16_t radius_2 =
-                th85_ripple_radius +
-                TH85_RIPPLE_SEPARATION;
-
-
-            if (radius_2 > TH85_RIPPLE_MAX_RADIUS) {
-                radius_2 -= TH85_RIPPLE_MAX_RADIUS;
-            }
-
-
-            uint8_t brightness_2 =
-                th85_zone_ring_brightness(
-                    side_distance,
-                    radius_2
-                );
-
-
-            uint8_t brightness =
-                brightness_1 >
-                    brightness_2
-                    ? brightness_1
-                    : brightness_2;
-
-
-            hsv.v =
-                (
-                    (uint16_t)
-                    Keyboard_Info.Side_Brightness *
-                    brightness
-                ) / 255;
-
-
-            rgb_t rgb =
-                hsv_to_rgb(hsv);
-
-
-            rgb_matrix_driver_set_color(
-                LED_SIDE_INDEX + i,
-                rgb.r,
-                rgb.g,
-                rgb.b
-            );
-        }
-    }
-
-#endif
-}
 
 
 /* ============================================================
