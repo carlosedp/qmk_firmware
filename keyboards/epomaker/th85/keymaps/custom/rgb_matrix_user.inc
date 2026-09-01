@@ -51,10 +51,8 @@ static uint16_t th85_ripple_distance(uint8_t led_index) {
         TH85_RIPPLE_CENTER_X;
 
     int16_t dy =
-        (
-            (int16_t)g_led_config.point[led_index].y -
-            TH85_RIPPLE_CENTER_Y
-        ) * TH85_RIPPLE_Y_SCALE;
+        (int16_t)g_led_config.point[led_index].y -
+        TH85_RIPPLE_CENTER_Y;
 
     uint16_t distance_squared =
         (uint16_t)(

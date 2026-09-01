@@ -30,19 +30,10 @@
  * translation units and both need these values, so they live here.
  * ============================================================ */
 
-#define TH85_RIPPLE_CENTER_X       112
-// Moved down from the vertical middle (40) towards the ZXCV row so the
-// ripple's origin feels centered under where your hands rest instead of
-// up near the QWERTY row.
-#define TH85_RIPPLE_CENTER_Y        50
-
-// The key matrix's coordinate space is only ~50 units tall (y 10..60)
-// but ~224 units wide, so a plain circular distance reaches the top/
-// bottom edges almost immediately and spends nearly all of its travel
-// sweeping left/right. Scaling dy up compensates for that squish so the
-// ripple spends comparable time/visible travel going up and down as it
-// does going left and right.
-#define TH85_RIPPLE_Y_SCALE          3
+// Between G (x=85) and H (x=100) on the home row (y=40), per
+// g_led_config in th85.c - the physically central point on the board.
+#define TH85_RIPPLE_CENTER_X        92
+#define TH85_RIPPLE_CENTER_Y        40
 
 #define TH85_RIPPLE_MAX_RADIUS     120
 #define TH85_RIPPLE_SEPARATION      60
@@ -50,3 +41,10 @@
 #define TH85_RIPPLE_FRAME_MS        25
 #define TH85_RIPPLE_STEP             3
 #define TH85_RIPPLE_WIDTH           10
+
+// Logo/side don't have real per-LED coordinates (they sit at a single
+// placeholder point in g_led_config), so they're driven by a synthetic
+// "distance" instead of the real x/y math the key matrix uses. Their
+// window uses a wider band than TH85_RIPPLE_WIDTH so the flash lasts
+// long enough to read as a pulse instead of a single-frame blip.
+#define TH85_RIPPLE_ZONE_WIDTH      30

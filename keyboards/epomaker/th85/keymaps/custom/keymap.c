@@ -356,7 +356,7 @@ static uint8_t th85_zone_ring_brightness(
         difference = -difference;
     }
 
-    if (difference >= TH85_RIPPLE_WIDTH) {
+    if (difference >= TH85_RIPPLE_ZONE_WIDTH) {
         return 0;
     }
 
@@ -366,7 +366,7 @@ static uint8_t th85_zone_ring_brightness(
         255 -
         (
             ((uint16_t)difference * 255) /
-            TH85_RIPPLE_WIDTH
+            TH85_RIPPLE_ZONE_WIDTH
         )
     );
 }
