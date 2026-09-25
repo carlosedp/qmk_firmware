@@ -487,6 +487,8 @@ void kb_housekeeping_task(void) {
         Show_Mode_Indicator = false;
     }
 
+    Usb_Auto_Switch_Task();
+
 #if LOGO_LED_ENABLE
     // Update logo LEDs independently of RGB matrix state
     // This allows logo LEDs to work even when per-key RGB is disabled

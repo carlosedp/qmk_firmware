@@ -302,6 +302,7 @@ extern uint16_t Time_3s_Count;
 extern uint16_t Func_Time_3s_Count;
 
 extern void Init_Keyboard_Infomation(void);
+extern void Usb_Auto_Switch_Task(void);
 extern void es_change_qmk_nkro_mode_enable(void);
 void        es_change_qmk_nkro_mode_disable(void);
 

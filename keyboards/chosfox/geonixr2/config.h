@@ -34,15 +34,14 @@
 #    define NOP_FUDGE 0.4
 #endif
 
-#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 1151
-#define EEPROM_SIZE 1152
-#define FEE_PAGE_SIZE (0x200)
-#define FEE_PAGE_COUNT (8)
-#define FEE_PAGE_BASE_ADDRESS (0x1F000)
-#define FEE_MCU_FLASH_SIZE (0x1000)
+// Emulated EEPROM (lib/rdmctmzt_common/user_eeprom.c): two fixed 8kB flash
+// pages at 0x1C000, mirrored in RAM. EEPROM_SIZE only sets how much of them
+// is used; 2048 leaves ~1000 writes between page erases.
+#define EEPROM_SIZE 2048
+#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR (EEPROM_SIZE - 1)
+#define DYNAMIC_KEYMAP_LAYER_COUNT 8
 #define EECONFIG_USER_DATA_SIZE 4
 #define EECONFIG_KB_DATA_SIZE 1
-#define TRANSIENT_EEPROM_SIZE 4096
 
 #define RGB_MATRIX_LED_COUNT 47
 #define RGB_MATRIX_KEYPRESSES

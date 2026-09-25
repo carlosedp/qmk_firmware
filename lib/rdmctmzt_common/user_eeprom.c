@@ -56,6 +56,20 @@
 #define NB_OF_VAR             (EEPROM_SIZE)
 #define NB_OF_PRIVATE_VAR     (64)
 
+/* Range of 16-bit words copied on a page transfer. The first NB_OF_PRIVATE_VAR
+ * bytes mirror the separate user page (reloaded from there on init), so only
+ * the QMK EEPROM words need to be carried over. */
+#define TRANSFER_FIRST_WORD   (NB_OF_PRIVATE_VAR / 2)
+#define TRANSFER_END_WORD     ((NB_OF_PRIVATE_VAR + NB_OF_VAR) / 2)
+
+/* A page transfer must fit every QMK EEPROM word plus the header and the word
+ * being written into one page, otherwise the transfer fails half way and the
+ * stored settings are lost. EEPROM_SIZE only changes how much of the fixed
+ * 8kB pages is used; it never moves the flash region. Keep it well below this
+ * limit so there is room for writes between transfers (flash wear). */
+_Static_assert((EEPROM_SIZE % 2) == 0, "EEPROM_SIZE must be even");
+_Static_assert((TRANSFER_END_WORD - TRANSFER_FIRST_WORD) + 2 <= (PAGE_SIZE / 4), "EEPROM_SIZE too large for the 8kB emulated EEPROM pages");
+
 #define ES_MCU_MEM_REMAP_OFFSET  ((((SYSCFG->REMAP)&SYSCFG_REMAP_REALBASE_MSK) >> SYSCFG_REMAP_REALBASE_POSS) << 12)
 
 //__attribute__((aligned(4))) static uint8_t g_es_flash_eeprom_table[EEPROM_SIZE + 2];
@@ -208,7 +222,7 @@ static uint32_t ee_init(void)
             if (page_status1 == VALID_PAGE) /* Page0 receive, Page1 valid */
             {
                 /* Transfer data from Page1 to Page0 */
-                for (var_idx = 0; var_idx < (NB_OF_VAR / 2 + 1); var_idx++)
+                for (var_idx = TRANSFER_FIRST_WORD; var_idx < TRANSFER_END_WORD; var_idx++)
                 {
                     if((*(((__IO uint16_t*)((uint32_t)g_es_flash_eeprom_table)) + var_idx)) != 0)
                     {
@@ -265,7 +279,7 @@ static uint32_t ee_init(void)
             else /* Page0 valid, Page1 receive */
             {
                 /* Transfer data from Page0 to Page1 */
-                for (var_idx = 0; var_idx < (NB_OF_VAR / 2 + 1); var_idx++)
+                for (var_idx = TRANSFER_FIRST_WORD; var_idx < TRANSFER_END_WORD; var_idx++)
                 {
                     if((*(((__IO uint16_t*)((uint32_t)g_es_flash_eeprom_table)) + var_idx)) != 0)
                     {
@@ -304,7 +318,7 @@ static uint32_t ee_write_variable(uint32_t virt_address)
     uint32_t status = 0U;
     uint16_t data;
 
-    if(virt_address >= NB_OF_VAR)
+    if(virt_address >= (NB_OF_PRIVATE_VAR + NB_OF_VAR))  /* byte index incl. the private area offset */
     {
         return !SET;
     }
@@ -490,7 +504,7 @@ static uint32_t ee_page_transfer(uint32_t virt_address, uint32_t data)
     //for (var_idx = 0; var_idx < NB_OF_VAR; var_idx++)
     {
                 /* Transfer data from Page1 to Page0 */
-                for (var_idx = 0; var_idx < (NB_OF_VAR / 2 + 1); var_idx++)
+                for (var_idx = TRANSFER_FIRST_WORD; var_idx < TRANSFER_END_WORD; var_idx++)
                 {
                     if((*(((__IO uint16_t*)((uint32_t)g_es_flash_eeprom_table)) + var_idx)) != 0)
                     {
