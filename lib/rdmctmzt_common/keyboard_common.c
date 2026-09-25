@@ -482,6 +482,33 @@ bool kb_led_update(led_t led_state) {
     return true;
 }
 
+// When RGB Matrix is disabled (RM_TOGG), QMK renders the "none" effect, skips
+// the indicator callbacks and stops flushing the LED driver after one frame.
+// Draw the indicators ourselves and flush periodically, so the connection,
+// Caps Lock and battery indicators keep working and the logo/side zone
+// animations keep running.
+static void kb_render_leds_while_matrix_off(void) {
+    static uint16_t last_flush = 0;
+
+    if (rgb_matrix_is_enabled() || rgb_matrix_get_suspend_state()) {
+        return;
+    }
+    if (timer_elapsed(last_flush) < RGB_MATRIX_LED_FLUSH_LIMIT) {
+        return;
+    }
+    last_flush = timer_read();
+
+    rgb_matrix_set_color_all(COLOR_OFF);
+    rgb_matrix_indicators_advanced_kb(0, RGB_MATRIX_LED_COUNT);
+#if LOGO_LED_ENABLE
+    Logo_Led_Update();
+#endif
+#if SIDE_LED_ENABLE
+    Side_Led_Update();
+#endif
+    rgb_matrix_update_pwm_buffers();
+}
+
 void kb_housekeeping_task(void) {
     if (Show_Mode_Indicator && timer_elapsed(Mode_Indicator_Timer) > MODE_INDICATOR_TIMEOUT) {
         Show_Mode_Indicator = false;
@@ -495,6 +522,8 @@ void kb_housekeeping_task(void) {
 #if SIDE_LED_ENABLE
     Side_Led_Update();
 #endif
+
+    kb_render_leds_while_matrix_off();
 
     // Handle EEPROM reset request
     if (Keyboard_Reset) {

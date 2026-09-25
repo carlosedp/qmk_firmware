@@ -87,11 +87,15 @@ void rgb_matrix_driver_flush_pwm_dma_start(void) {
         return;
     }
 
-    // Keep LED power on if either RGB matrix OR logo LEDs are enabled
+    // Keep LED power on if either RGB matrix OR logo LEDs are enabled, or if
+    // anything (e.g. an indicator drawn while the matrix is off) is lit.
     bool leds_active = rgb_matrix_is_enabled();
 #if LOGO_LED_ENABLE
     leds_active = leds_active || Keyboard_Info.Logo_On_Off;
 #endif
+    for (uint8_t i = 0; !leds_active && i < RGB_MATRIX_LED_COUNT; i++) {
+        leds_active = rgb_matrix_ws2812_array[i].r || rgb_matrix_ws2812_array[i].g || rgb_matrix_ws2812_array[i].b;
+    }
 
     if (leds_active) {
         gpio_write_pin_high(ES_LED_POWER_IO);
