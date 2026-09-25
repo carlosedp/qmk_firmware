@@ -33,7 +33,7 @@
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
 
 #ifndef NOP_FUDGE
-#    define NOP_FUDGE 0.4
+#define NOP_FUDGE 0.4
 #endif
 
 // Shared EEPROM sizing + layer count for all Epomaker FS026 boards
