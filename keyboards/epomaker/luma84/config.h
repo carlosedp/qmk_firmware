@@ -67,17 +67,12 @@
 #define SD1_TX_PIN C10
 #define SD1_RX_PIN C11
 
-/* Provide compatibility aliases expected by wireless low-power code */
-#ifndef UART_RX_PIN
-#    define UART_RX_PIN SD1_RX_PIN
-#endif
-#ifndef UART_RX_PAL_MODE
-#    define UART_RX_PAL_MODE 7
-#endif
-/* Ensure the UART driver symbol used by platform drivers is set */
-#ifndef UART_DRIVER
-#    define UART_DRIVER SD3
-#endif
+/* UART for wireless module */
+#define UART_DRIVER SD3
+#define UART_TX_PIN C10
+#define UART_TX_PAL_MODE 7
+#define UART_RX_PIN C11
+#define UART_RX_PAL_MODE 7
 
 /* Encoder */
 #define ENCODER_MAP_KEY_DELAY 1

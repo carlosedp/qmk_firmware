@@ -156,8 +156,8 @@ void wb32_stop_mode(void) {
     EXTI->PR = 0x7FFFF;
     for (uint8_t i = 0; i < 8; i++) {
         for (uint8_t j = 0; j < 32; j++) {
-            if (NVIC->ISPR[i] & (0x01UL < j)) {
-                NVIC->ICPR[i] = (0x01UL < j);
+            if (NVIC->ISPR[i] & (0x01UL << j)) {
+                NVIC->ICPR[i] = (0x01UL << j);
             }
         }
     }
