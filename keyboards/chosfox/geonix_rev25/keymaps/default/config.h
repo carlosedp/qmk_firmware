@@ -16,14 +16,8 @@
 
 #pragma once
 
-#define HAL_USE_PWM TRUE
+#define VIAL_KEYBOARD_UID { 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6, 0x11, 0x22 }
 
-#define ES32_PWM_USE_GP16C4T2   TRUE
-
-#define BACKLIGHT_PWM_DRIVER    PWM_GP16C4T2
-#define BACKLIGHT_PWM_CHANNEL   3
-
-#define HAL_USE_USB TRUE
-#define HAL_USE_PAL TRUE
-
-#include_next <halconf.h>
+#define VIAL_UNLOCK_COMBO_ROWS {0, 0}
+#define VIAL_UNLOCK_COMBO_COLS {0, 1}
+#define DYNAMIC_KEYMAP_LAYER_COUNT 7

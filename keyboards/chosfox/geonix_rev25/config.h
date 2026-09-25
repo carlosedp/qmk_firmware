@@ -1,4 +1,4 @@
-/* Copyright 2025 bofhgit
+/* Copyright 2026 BunnyHorseCat
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,15 @@
 
 #pragma once
 
-#define LOCKING_SUPPORT_ENABLE
-#define LOCKING_RESYNC_ENABLE
-
 #define MATRIX_UNSELECT_DRIVE_HIGH
 #define CORTEX_ENABLE_WFI_IDLE FALSE
 
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
 
-#define DEBOUNCE 5
 #define ONESHOT_TIMEOUT 1000
 
 #ifndef NOP_FUDGE
-#    define NOP_FUDGE 0.4
+#define NOP_FUDGE 0.4
 #endif
 
 #define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 1151
@@ -41,7 +37,7 @@
 #define EECONFIG_KB_DATA_SIZE 1
 #define TRANSIENT_EEPROM_SIZE 4096
 
-#define RGB_MATRIX_LED_COUNT 48
+#define RGB_MATRIX_LED_COUNT 77
 #define RGB_MATRIX_KEYPRESSES
 #define RGB_MATRIX_KEYRELEASES
 #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
@@ -50,11 +46,17 @@
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
 #define RGB_MATRIX_SLEEP
 
+#define RGB_MATRIX_SPD_STEP   16                 // 设置 RGB 矩阵速度步进值
+#define RGB_MATRIX_VAL_STEP   16                 // 设置 RGB 矩阵亮度步进值
+
 // BLE configuration for GEONIX REV.2.5 OSS port
-#define USER_BLE_ID (0X00A6)
-#define USER_BLE1_NAME "GEONIX41-1"
-#define USER_BLE2_NAME "GEONIX41-2"
-#define USER_BLE3_NAME "GEONIX41-3"
+#define USER_BLE_ID (0X0116)
+#define USER_BLE1_NAME "Geonix R2.5 1"
+#define USER_BLE2_NAME "Geonix R2.5 2"
+#define USER_BLE3_NAME "Geonix R2.5 3"
+
+/* Battery LED count */
+#define BATTERY_LED_COUNT 10
 
 // LED Index Definitions (for keyboard_common library)
 // Row 0 (TAB row):  LEDs  0-11 = TAB,Q,W,E,R,T,Y,U,I,O,P,BSPC
@@ -62,6 +64,9 @@
 // Row 2 (SFT row):  LEDs 24-35 = LSFT,Z,X,C,V,B,N,M,,,.,UP,ENT
 // Row 3 (bot row):  LEDs 36,--,37,38,39,40,41,42,43,44,45,46
 //                        MO2,   DEL,CTL,ALT,GUI,SPC,RGUI,/,<,v,>
+#define LOGO_LED_ENABLE 1       // Enable Logo LED functionality
+#define LED_LOGO_INDEX 48       // Logo LED starting index (48-76 are logo/bottom LEDs)
+#define LOGO_LED_COUNT 29       // Number of logo/bottom LEDs
 #define LED_CONNECTION_INDEX 11  // BSPC - connection type indicator
 #define LED_CAP_INDEX        12  // ESC  - Caps Lock indicator
 #define LED_WIN_L_INDEX      40  // LGUI - Win Lock indicator (Win key lights up when locked)

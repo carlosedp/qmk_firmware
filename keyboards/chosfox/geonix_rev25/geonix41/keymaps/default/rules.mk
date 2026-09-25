@@ -1,4 +1,0 @@
-VIA_ENABLE = yes
-VIAL_ENABLE = yes
-EEPROM_DRIVER = custom
-RAW_ENABLE = yes

@@ -1,10 +1,10 @@
 {
-    "keyboard_name": "GEONIX REV.2.5 OSS",
-    "manufacturer": "RDMCTMZT",
-    "maintainer": "bofhgit",
+    "keyboard_name": "Geonix Rev 2.5",
+    "manufacturer": "Chosfox",
+    "maintainer": "BunnyHorseCat",
     "usb": {
         "vid": "0x36B0",
-        "pid": "0x313C",
+        "pid": "0x313F",
         "device_version": "0.0.1"
     },
     "matrix_pins": {
@@ -12,6 +12,11 @@
         "rows": [ "B0", "B4", "B5", "B6"]
     },
     "diode_direction": "ROW2COL",
+    "build": {
+	    "debounce_type":
+    "sym_eager_pk"
+	},
+    "debounce": 50,
     "features": {
         "bootmagic": true,
         "extrakey": true,
@@ -46,13 +51,18 @@
             "dual_beacon": true,
             "rainbow_beacon": true,
             "rainbow_pinwheels": true,
+            "flower_blooming": true,
             "raindrops": true,
             "jellybean_raindrops": true,
             "hue_breathing": true,
             "hue_pendulum": true,
             "hue_wave": true,
+            "pixel_fractal": false,
             "pixel_flow": true,
+            "pixel_rain": true,
+            "typing_heatmap": true,
             "digital_rain": true,
+            "solid_reactive_simple": false,
             "solid_reactive": true,
             "solid_reactive_wide": true,
             "solid_reactive_multiwide": true,
@@ -118,7 +128,8 @@
                 {"matrix": [3, 3],  "x": 2.75,  "y": 3.25},
                 {"matrix": [3, 4],  "x": 3.75,  "y": 3.25},
                 {"matrix": [3, 5],  "x": 4.75,  "y": 3.25},
-                {"matrix": [3, 6],  "x": 6.75,  "y": 3.25, "w": 1.25},
+                {"matrix": [3, 6],  "x": 5.75,  "y": 3.25},
+                {"matrix": [3, 1],  "x": 6.75,  "y": 3.25},
                 {"matrix": [3, 7],  "x": 7.75,  "y": 3.25},
                 {"matrix": [3, 8],  "x": 8.75,  "y": 3.25},
                 {"matrix": [3, 9],  "x": 9.75,  "y": 3.25},

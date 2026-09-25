@@ -1,5 +1,5 @@
 {
-    "name": "Geonix rev.2.5 1U",
+    "name": "Chosfox Geonix Rev 2.5",
     "vendorId": "0x36B0",
     "productId": "0x313F",
     "keycodes": ["qmk_lighting"],
@@ -21,57 +21,55 @@
                             "type": "dropdown",
                             "content": ["id_qmk_rgb_matrix_effect", 3, 2],
                             "options": [
-                                ["none", 0],
-                                ["solid_color", 1],
-                                ["alphas_mods", 2],
-                                ["gradient_up_down", 3],
-                                ["gradient_left_right", 4],
-                                ["breathing", 5],
-                                ["band_sat", 6],
-                                ["band_val", 7],
-                                ["band_pinwheel_sat", 8],
-                                ["band_pinwheel_val", 9],
-                                ["band_spiral_sat", 10],
-                                ["band_spiral_val", 11],
-                                ["cycle_all", 12],
-                                ["cycle_left_right", 13],
-                                ["cycle_up_down", 14],
-                                ["cycle_out_in", 15],
-                                ["cycle_out_in_dual", 16],
-                                ["rainbow_moving_chevron", 17],
-                                ["cycle_pinwheel", 18],
-                                ["cycle_spiral", 19],
-                                ["dual_beacon", 20],
-                                ["rainbow_beacon", 21],
-                                ["rainbow_pinwheels", 22],
-                                ["flower_blooming", 23],
-                                ["raindrops", 24],
-                                ["jellybean_raindrops", 25],
-                                ["hue_breathing", 26],
-                                ["hue_pendulum", 27],
-                                ["hue_wave", 28],
-                                ["pixel_fractal", 29],
-                                ["pixel_flow", 30],
-                                ["pixel_rain", 31],
-                                ["typing_heatmap", 32],
-                                ["digital_rain", 33],
-                                ["solid_reactive", 34],
-                                ["solid_reactive_wide", 35],
-                                ["solid_reactive_multiwide", 36],
-                                ["solid_reactive_cross", 37],
-                                ["solid_reactive_multicross", 38],
-                                ["solid_reactive_nexus", 39],
-                                ["solid_reactive_multinexus", 40],
-                                ["splash", 41],
-                                ["multisplash", 42],
-                                ["solid_splash", 43],
-                                ["solid_multisplash", 44],
-                                ["starlight", 45],
-                                ["starlight_smooth", 46],
-                                ["starlight_dual_hue", 47],
-                                ["starlight_dual_sat", 48],
-                                ["riverflow", 49]
-                            ]
+								[ "None", 0 ],
+								[ "Solid Color", 1 ],
+								[ "Alphas Mods", 2 ],
+								[ "Gradient Up Down", 3 ],
+								[ "Gradient Left Right", 4 ],
+								[ "Breathing", 5 ],
+								[ "Band Sat", 6 ],
+								[ "Band Val", 7 ],
+								[ "Band Pinwheel Sat", 8 ],
+								[ "Band Pinwheel Val", 9 ],
+								[ "Band Spiral Sat", 10 ],
+								[ "Band Spiral Val", 11 ],
+								[ "Cycle All", 12 ],
+								[ "Cycle Left Right", 13 ],
+								[ "Cycle Up Down", 14 ],
+								[ "Rainbow Moving Chevron", 15 ],
+								[ "Cycle Out In", 16 ],
+								[ "Cycle Out In Dual", 17 ],
+								[ "Cycle Pinwheel", 18 ],
+								[ "Cycle Spiral", 19 ],
+								[ "Dual Beacon", 20 ],
+								[ "Rainbow Beacon", 21 ],
+								[ "Rainbow Pinwheels", 22 ],
+								[ "Flower Blooming", 23 ],
+								[ "Raindrops", 24 ],
+								[ "Jellybean Raindrops", 25 ],
+								[ "Hue Breathing", 26 ],
+								[ "Hue Pendulum", 27 ],
+								[ "Hue Wave", 28 ],
+								[ "Pixel Rain", 29 ],
+								[ "Pixel Flow", 30 ],
+								[ "Typing Heatmap", 31 ],
+								[ "Digital Rain", 32 ],
+								[ "Solid Reactive", 33 ],
+								[ "Solid Reactive Wide", 34 ],
+								[ "Solid Reactive Multiwide", 35 ],
+								[ "Solid Reactive Cross", 36 ],
+								[ "Solid Reactive Multicross", 37 ],
+								[ "Solid Reactive Nexus", 38 ],
+								[ "Solid Reactive Multinexus", 39 ],
+								[ "Splash", 40 ],
+								[ "Multisplash", 41 ],
+								[ "Solid Splash", 42 ],
+								[ "Solid Multisplash", 43 ],
+								[ "Starlight", 44 ],
+								[ "Starlight Dual Sat", 45 ],
+								[ "Starlight Dual Hue", 46 ],
+								[ "Riverflow", 47 ]
+							]
                         },
                         {
                             "showIf": "{id_qmk_rgb_matrix_effect} != 0",
@@ -122,7 +120,11 @@
             "title": "Querying Battery Status",
             "shortName": "QK_BAT"
         },
-        { "name": "WLO", "title": "Lock WIN", "shortName": "QK_WLO" },
+        {
+            "name": "WLO",
+            "title": "Lock WIN",
+            "shortName": "QK_WLO"
+        },
         {
             "name": "SIX_N",
             "title": "Full-key six-key switch",
@@ -132,6 +134,31 @@
             "name": "TEST",
             "title": "Test led lighting",
             "shortName": "RGB_TEST"
+        },
+	{
+           "name": "2.4GPair",
+           "title": "2.4G Pairing Key",
+           "shortName": "QMK_KB_2P4G_PAIR"
+        },
+	{
+           "name": "BLE1Pair",
+           "title": "Bluetooth Channel 1 Pairing Key",
+           "shortName": "QMK_KB_BLE1_PAIR"
+        },
+	{
+           "name": "BLE2Pair",
+           "title": "Bluetooth Channel 2 Pairing Key",
+           "shortName": "QMK_KB_BLE2_PAIR"
+        },
+	{
+           "name": "BLE3Pair",
+           "title": "Bluetooth Channel 3 Pairing Key",
+           "shortName": "QMK_KB_BLE3_PAIR"
+        },
+	{
+           "name": "MacWin",
+           "title": "QMK Mac Win Mode Switch",
+           "shortName": "MW_CH"
         },
         {
             "name": "PAIR",
@@ -196,19 +223,75 @@
     ],
     "matrix": { "rows": 4, "cols": 12 },
     "layouts": {
+    "labels": [
+      "Full 1U Layout"
+    ],
         "keymap": [
-            [
-                "0,0", "0,1", "0,2", "0,3", "0,4", "0,5", "0,6", "0,7", "0,8", "0,9", "0,10", "0,11"
-            ],
-            [
-                "1,0", "1,1", "1,2", "1,3", "1,4", "1,5", "1,6", "1,7", "1,8", "1,9", "1,10", "1,11"
-            ],
-            [
-                "2,0", "2,1", "2,2", "2,3", "2,4", "2,5", "2,6", "2,7", "2,8", "2,9", "2,10", "2,11"
-            ],
-            [
-                "3,0", "3,2", "3,3", "3,4", "3,5", "3,6", "3,1", "3,7", "3,8", "3,9", "3,10", "3,11"
-            ]
-        ]
+  [
+    "0,0",
+    "0,1",
+    "0,2",
+    "0,3",
+    "0,4",
+    "0,5",
+    "0,6",
+    "0,7",
+    "0,8",
+    "0,9",
+    "0,10",
+    "0,11"
+  ],
+  [
+    "1,0",
+    "1,1",
+    "1,2",
+    "1,3",
+    "1,4",
+    "1,5",
+    "1,6",
+    "1,7",
+    "1,8",
+    "1,9",
+    "1,10",
+    "1,11"
+  ],
+  [
+    "2,0",
+    "2,1",
+    "2,2",
+    "2,3",
+    "2,4",
+    "2,5",
+    "2,6",
+    "2,7",
+    "2,8",
+    "2,9",
+    "2,10",
+    "2,11"
+  ],
+  [
+    "3,0",
+    "3,2",
+    "3,3",
+    "3,4",
+    "3,5",
+    {
+      "w": 2
+    },
+    "3,6\n\n\n0,0",
+    "3,7",
+    "3,8",
+    "3,9",
+    "3,10",
+    "3,11"
+  ],
+  [
+    {
+      "x": 5
+    },
+    "3,6\n\n\n0,1",
+    "3,1\n\n\n0,1"
+  ]
+]
     }
 }

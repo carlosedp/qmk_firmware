@@ -77,12 +77,10 @@
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 155
 #define RGB_MATRIX_SLEEP
 
-// #define RGB_MATRIX_HUE_STEP 8               // 设置 RGB 矩阵速度步进值
-// #define RGB_MATRIX_SAT_STEP 16              // 设置 RGB 矩阵速度步进值 
 #define RGB_MATRIX_SPD_STEP 16                 // 设置 RGB 矩阵速度步进值
-#define RGB_MATRIX_VAL_STEP 13                 // 设置 RGB 矩阵亮度步进值
-// #define RGB_MATRIX_DEFAULT_VAL 155          // 设置 RGB 矩阵默认亮度值
-// #define RGB_MATRIX_DEFAULT_SPD 128          // 设置 RGB 矩阵默认亮度值
+#define RGB_MATRIX_VAL_STEP 16                 // 设置 RGB 矩阵亮度步进值
+#define RGB_MATRIX_DEFAULT_VAL 155          // 设置 RGB 矩阵默认亮度值
+#define RGB_MATRIX_DEFAULT_SPD 128          // 设置 RGB 矩阵默认亮度值
 
 // BLE configuration
 #define USER_BLE_ID (0X307A)
