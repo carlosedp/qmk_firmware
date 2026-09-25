@@ -135,6 +135,9 @@ void kb_update_connection_indicator(void);
 void kb_update_state_indicators(void);
 void kb_show_current_connection_mode(void);
 
+// Toggle the main, logo and side LED zones together
+void kb_toggle_all_leds(void);
+
 // ============================================================================
 // QMK Callback Functions - Common implementations
 // ============================================================================

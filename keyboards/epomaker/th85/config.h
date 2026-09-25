@@ -60,6 +60,11 @@
 #define RGB_MATRIX_SLEEP
 #define RGB_MATRIX_BACKLIGHT_COUNT 84
 
+// Default Backlight color on first boot / EEPROM reset: #8610FF
+#define RGB_MATRIX_DEFAULT_HUE 191
+#define RGB_MATRIX_DEFAULT_SAT 239
+#define RGB_MATRIX_DEFAULT_VAL 255
+
 // BLE configuration for TH85
 #define USER_BLE_ID (0X00A5) // TH85 BLE ID
 #define USER_BLE1_NAME "TH85-1"
@@ -75,6 +80,11 @@
 #define SIDE_LED_ENABLE 1 // Enable Side LED functionality
 #define LED_SIDE_INDEX 92 // Side LED starting index (after 84 key + 8 logo)
 #define SIDE_LED_COUNT 38 // Number of side LEDs
+
+// Battery indicator: 10 LEDs over the number row (1-0), not the default's
+// top row (ESC-F11) - and match the factory manual's real red threshold.
+#define BATTERY_LED_COUNT 10
+#define BATTERY_LOW_THRESHOLD 30
 
 // LED Index Definitions for keyboard_common library
 #define LED_CONNECTION_INDEX 84 // Connection type indicator (underglow LED)

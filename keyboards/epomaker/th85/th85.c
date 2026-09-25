@@ -21,8 +21,8 @@
 // Keyboard-specific data
 // ===========================================================================
 
-// Battery indicator LED indices (top row, F1-F12)
-const uint8_t Led_Batt_Index_Tab[BATTERY_LED_COUNT] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+// Battery indicator LED indices (number row, 1-0)
+const uint8_t Led_Batt_Index_Tab[BATTERY_LED_COUNT] = {17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
 
 // clang-format off
 led_config_t g_led_config = { {
@@ -65,19 +65,24 @@ led_config_t g_led_config = { {
 // QMK Callback Functions - Delegate to common implementations
 // ============================================================================
 
-bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    return kb_rgb_matrix_indicators_common(led_min, led_max);
+// These are keyboard-level (_kb) hooks rather than _user so that keymaps can
+// still provide their own _user overrides without colliding with them here.
+bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+    kb_rgb_matrix_indicators_common(led_min, led_max);
+    return rgb_matrix_indicators_advanced_user(led_min, led_max);
 }
 
-void notify_usb_device_state_change_user(struct usb_device_state usb_device_state) {
+void notify_usb_device_state_change_kb(struct usb_device_state usb_device_state) {
     kb_notify_usb_device_state_change(usb_device_state);
+    notify_usb_device_state_change_user(usb_device_state);
 }
 
-bool led_update_user(led_t led_state) {
-    return kb_led_update(led_state);
+bool led_update_kb(led_t led_state) {
+    kb_led_update(led_state);
+    return led_update_user(led_state);
 }
 
-void housekeeping_task_user(void) {
+void housekeeping_task_kb(void) {
     kb_housekeeping_task();
 }
 
@@ -85,74 +90,34 @@ void board_init(void) {
     kb_board_init();
 }
 
-void keyboard_post_init_user(void) {
+void keyboard_post_init_kb(void) {
     kb_keyboard_post_init();
+    keyboard_post_init_user();
 }
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #if LOGO_LED_ENABLE
     process_logo_led_keycodes(keycode, record);
 #endif
 #if SIDE_LED_ENABLE
     process_side_led_keycodes(keycode, record);
 #endif
-    return kb_process_record_common(keycode, record);
+    if (!kb_process_record_common(keycode, record)) {
+        return false;
+    }
+    return process_record_user(keycode, record);
 }
 
 #if defined(VIA_ENABLE) && (defined(LOGO_LED_ENABLE) || defined(SIDE_LED_ENABLE))
-// VIA custom channel IDs for Logo LED (channel 1) and Side LED (channel 4)
-enum via_logo_led_value {
-    id_logo_brightness   = 1,
-    id_logo_effect       = 2,
-    id_logo_effect_speed = 3,
-    id_logo_color        = 4,
-};
-
+// VIA custom channel IDs: Logo LED zone (channel 2), Side LED zone (channel 4).
+// Both zones share the same wire protocol (see via_led_zone_command in
+// user_led_zone.c): value_id 1=brightness, 2=effect, 3=speed, 4=hue+sat.
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
-    uint8_t *command_id = &(data[0]);
     uint8_t *channel_id = &(data[1]);
-    uint8_t *value_id   = &(data[2]);
-    uint8_t *value_data = &(data[3]);
 
 #    if LOGO_LED_ENABLE
-    if (*channel_id == 1) {
-        if (*command_id == id_custom_set_value) {
-            switch (*value_id) {
-                case id_logo_brightness:
-                    Keyboard_Info.Logo_Brightness = value_data[0];
-                    Save_Flash_Set();
-                    break;
-                case id_logo_effect:
-                    Keyboard_Info.Logo_Mode = value_data[0];
-                    Save_Flash_Set();
-                    break;
-                case id_logo_effect_speed:
-                    Keyboard_Info.Logo_Speed = value_data[0];
-                    Save_Flash_Set();
-                    break;
-                case id_logo_color:
-                    Keyboard_Info.Logo_Hue        = value_data[0];
-                    Keyboard_Info.Logo_Saturation = value_data[1];
-                    Save_Flash_Set();
-                    break;
-            }
-        } else if (*command_id == id_custom_get_value) {
-            switch (*value_id) {
-                case id_logo_brightness:
-                    value_data[0] = Keyboard_Info.Logo_Brightness;
-                    break;
-                case id_logo_effect:
-                    value_data[0] = Keyboard_Info.Logo_Mode;
-                    break;
-                case id_logo_effect_speed:
-                    value_data[0] = Keyboard_Info.Logo_Speed;
-                    break;
-                case id_logo_color:
-                    value_data[0] = Keyboard_Info.Logo_Hue;
-                    value_data[1] = Keyboard_Info.Logo_Saturation;
-                    break;
-            }
-        }
+    if (*channel_id == 2) {
+        via_logo_led_command(data, length);
         return;
     }
 #    endif

@@ -17,7 +17,7 @@
 							"showIf": "{id_qmk_rgblight_effect} != 0",
 							"label": "Brightness",
 							"type": "range",
-							"options": [0, 70],
+							"options": [0, 160],
 							"content": ["id_qmk_rgblight_brightness", 2, 1]
 						},
 						{
@@ -27,15 +27,11 @@
 							"options":
 							[
 								[ "none", 0 ],
-								[ "wave", 1 ],
-								[ "spectrum", 2 ],
-								[ "light", 3 ],
-								[ "green", 4 ],
-								[ "blue", 5 ],
-								[ "pink", 6 ],
-								[ "yellow", 7 ],
-								[ "white", 8 ],
-								[ "shutdown", 9 ]
+								[ "fixed wave", 1 ],
+								[ "wave", 5 ],
+								[ "spectrum", 6 ],
+								[ "breathe", 7 ],
+								[ "light", 9 ]
 							]
 						},
 						{
@@ -46,7 +42,7 @@
 							"content": ["id_qmk_rgblight_effect_speed", 2, 3]
 						},
 						{
-							"showIf": "{id_qmk_rgblight_effect} != 0 && {id_qmk_rgblight_effect} != 1 && {id_qmk_rgblight_effect} != 3 && {id_qmk_rgblight_effect} != 6",
+							"showIf": "{id_qmk_rgblight_effect} != 0 && {id_qmk_rgblight_effect} != 5 && {id_qmk_rgblight_effect} != 6",
 							"label": "Color",
 							"type": "color",
 							"content": ["id_qmk_rgblight_color", 2, 4]
@@ -157,15 +153,11 @@
 							"options":
 							[
 								[ "none", 0 ],
-								[ "wave", 1 ],
-								[ "spectrum", 2 ],
-								[ "light", 3 ],
-								[ "green", 4 ],
-								[ "blue", 5 ],
-								[ "pink", 6 ],
-								[ "yellow", 7 ],
-								[ "white", 8 ],
-								[ "shutdown", 9 ]
+								[ "fixed wave", 1 ],
+								[ "wave", 5 ],
+								[ "spectrum", 6 ],
+								[ "breathe", 7 ],
+								[ "light", 9 ]
 							]
 						},
 						{
@@ -176,7 +168,7 @@
 							"content": ["id_qmk_audio_effect_speed", 4, 3]
 						},
 						{
-							"showIf": "{id_qmk_audio_effect} != 0 && {id_qmk_audio_effect} != 1 && {id_qmk_audio_effect} != 3 && {id_qmk_audio_effect} != 6",
+							"showIf": "{id_qmk_audio_effect} != 0 && {id_qmk_audio_effect} != 5 && {id_qmk_audio_effect} != 6",
 							"label": "Color",
 							"type": "color",
 							"content": ["id_qmk_audio_color", 4, 4]
@@ -308,7 +300,7 @@
 			],
 
 			[
-				{ "c":"#aaaaaa" },
+                { "c":"#aaaaaa" },
                 { "w":2.25, "h":1.0,  "x":0.0 },  "4,0",
                 { "c":"#cccccc" },
 				{ "w":1.0,  "h":1.0,  "x":0.0 },  "4,2",
