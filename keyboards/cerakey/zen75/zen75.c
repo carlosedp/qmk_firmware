@@ -53,32 +53,45 @@ led_config_t g_led_config = { {
 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 } };
+// clang-format on
 
-bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+    if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
+        return false;
+    }
     return kb_rgb_matrix_indicators_common(led_min, led_max);
 }
 
-void notify_usb_device_state_change_user(struct usb_device_state usb_device_state) {
+void notify_usb_device_state_change_kb(struct usb_device_state usb_device_state) {
     kb_notify_usb_device_state_change(usb_device_state);
+    notify_usb_device_state_change_user(usb_device_state);
 }
 
-bool led_update_user(led_t led_state) {
+bool led_update_kb(led_t led_state) {
+    if (!led_update_user(led_state)) {
+        return false;
+    }
     return kb_led_update(led_state);
 }
 
-void housekeeping_task_user(void) {
+void housekeeping_task_kb(void) {
     kb_housekeeping_task();
+    housekeeping_task_user();
 }
 
 void board_init(void) {
     kb_board_init();
 }
 
-void keyboard_post_init_user(void) {
+void keyboard_post_init_kb(void) {
     kb_keyboard_post_init();
+    keyboard_post_init_user();
 }
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (!process_record_user(keycode, record)) {
+        return false;
+    }
 #if LOGO_LED_ENABLE
     // Process logo LED keycodes - returns true if handled
     process_logo_led_keycodes(keycode, record);
@@ -89,10 +102,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #if defined(VIA_ENABLE) && defined(LOGO_LED_ENABLE)
 // VIA custom channel IDs for Logo LED
 enum via_logo_led_value {
-    id_logo_brightness = 1,
-    id_logo_effect = 2,
+    id_logo_brightness   = 1,
+    id_logo_effect       = 2,
     id_logo_effect_speed = 3,
-    id_logo_color = 4,
+    id_logo_color        = 4,
 };
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -121,7 +134,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                 Save_Flash_Set();
                 break;
             case id_logo_color:
-                Keyboard_Info.Logo_Hue = value_data[0];
+                Keyboard_Info.Logo_Hue        = value_data[0];
                 Keyboard_Info.Logo_Saturation = value_data[1];
                 Save_Flash_Set();
                 break;
