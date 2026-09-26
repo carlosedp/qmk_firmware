@@ -17,9 +17,9 @@
 #pragma once
 
 /* Mechanical locking support. Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap */
-//#define LOCKING_SUPPORT_ENABLE
+// #define LOCKING_SUPPORT_ENABLE
 /* Locking resynchronize hack */
-//#define LOCKING_RESYNC_ENABLE
+// #define LOCKING_RESYNC_ENABLE
 
 /* Define less important options */
 
@@ -49,7 +49,7 @@
  */
 
 #define MATRIX_UNSELECT_DRIVE_HIGH
-#define CORTEX_ENABLE_WFI_IDLE          FALSE
+#define CORTEX_ENABLE_WFI_IDLE FALSE
 
 /* Ensure we jump to bootloader if the RESET keycode was pressed */
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
@@ -58,15 +58,14 @@
 #define NOP_FUDGE 0.4
 #endif
 
-#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR  1151
-#define EEPROM_SIZE 1152
-#define FEE_PAGE_SIZE (0x200)
-#define FEE_PAGE_COUNT (8)
-#define FEE_PAGE_BASE_ADDRESS (0x1F000)
-#define FEE_MCU_FLASH_SIZE (0x1000)
+// Emulated EEPROM (lib/rdmctmzt_common/user_eeprom.c): two fixed 8kB flash
+// pages at 0x1C000, mirrored in RAM. EEPROM_SIZE only sets how much of them
+// is used; 2048 leaves ~1000 writes between page erases.
+#define EEPROM_SIZE 2048
+#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 2047
+
 #define EECONFIG_USER_DATA_SIZE 4
 #define EECONFIG_KB_DATA_SIZE 1
-#define TRANSIENT_EEPROM_SIZE 4096
 
 #define RGB_MATRIX_LED_COUNT 91
 #define RGB_MATRIX_KEYPRESSES
@@ -77,10 +76,10 @@
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 155
 #define RGB_MATRIX_SLEEP
 
-#define RGB_MATRIX_SPD_STEP 16                 // 设置 RGB 矩阵速度步进值
-#define RGB_MATRIX_VAL_STEP 16                 // 设置 RGB 矩阵亮度步进值
-#define RGB_MATRIX_DEFAULT_VAL 155          // 设置 RGB 矩阵默认亮度值
-#define RGB_MATRIX_DEFAULT_SPD 128          // 设置 RGB 矩阵默认亮度值
+#define RGB_MATRIX_SPD_STEP 16     // 设置 RGB 矩阵速度步进值
+#define RGB_MATRIX_VAL_STEP 16     // 设置 RGB 矩阵亮度步进值
+#define RGB_MATRIX_DEFAULT_VAL 155 // 设置 RGB 矩阵默认亮度值
+#define RGB_MATRIX_DEFAULT_SPD 128 // 设置 RGB 矩阵默认亮度值
 
 // BLE configuration
 #define USER_BLE_ID (0X307A)
@@ -94,7 +93,7 @@
 /* LED Index Definitions required by lib/rdmctmzt_common/keyboard_common.h */
 #define LOGO_LED_ENABLE 1       // Enable Logo LED functionality
 #define LED_LOGO_INDEX 84       // Logo LED starting index (84-90 are logo/bottom LEDs)
-#define LOGO_LED_COUNT 7       // Number of logo/bottom LEDs
+#define LOGO_LED_COUNT 7        // Number of logo/bottom LEDs
 #define LED_CONNECTION_INDEX 83 // Connection type indicator (BLE/2.4G/USB)
 #define LED_CAP_INDEX 46        // Caps Lock indicator
 #define LED_WIN_L_INDEX 75      // Win Lock indicator

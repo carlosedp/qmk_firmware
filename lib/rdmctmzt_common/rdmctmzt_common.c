@@ -82,6 +82,13 @@ uint16_t Mode_Indicator_Timer = 0;
 // USB auto-switch state tracking
 #if USB_AUTO_SWITCH_ENABLE
 static bool Usb_Power_Previous_State = false;
+// Wireless mode that was active when plugging in the cable forced USB mode.
+// While set, it is what gets saved to flash (so a power-up on battery resumes
+// wireless instead of USB) and it is restored when the cable is removed.
+// QMK_USB_MODE means no cable-forced switch is pending.
+static uint8_t  Usb_Auto_Switch_Resume_Mode = QMK_USB_MODE;
+static uint16_t Usb_Unplug_Timer            = 0;
+#    define USB_UNPLUG_DEBOUNCE_TIME 500 // ms without VBUS before leaving USB mode
 #endif
 
 // WAKEUP_IRQHandler
@@ -338,8 +345,15 @@ OSAL_IRQ_HANDLER(Vector78) {
                 if (Spi_Send_Recv_Flg || (gpio_read_pin(ES_SPI_ACK_IO)) || (!Led_Flash_Busy)) {
                     Save_Flash_3S_Count = (USER_TIME_3S_TIME - 10);
                 } else {
+                    Keyboard_Info_t Save_Info = Keyboard_Info;
+#if USB_AUTO_SWITCH_ENABLE
+                    // Don't persist a USB mode that only the cable forced
+                    if (Keyboard_Info.Key_Mode == QMK_USB_MODE && Usb_Auto_Switch_Resume_Mode != QMK_USB_MODE) {
+                        Save_Info.Key_Mode = Usb_Auto_Switch_Resume_Mode;
+                    }
+#endif
                     Reset_Save_Flash = true;
-                    eeprom_write_block_user((void *)&Keyboard_Info.Key_Mode, 0, sizeof(Keyboard_Info_t));
+                    eeprom_write_block_user((void *)&Save_Info, 0, sizeof(Keyboard_Info_t));
                     Reset_Save_Flash    = false;
                     Save_Flash          = false;
                     Save_Flash_3S_Count = 0;
@@ -371,7 +385,8 @@ OSAL_IRQ_HANDLER(Vector78) {
             // Auto-switch to USB mode when USB cable is plugged in
             if (!Usb_Power_Previous_State && Keyboard_Info.Key_Mode != QMK_USB_MODE) {
                 // USB was just plugged in and we're not in USB mode - switch to USB
-                Keyboard_Info.Key_Mode = QMK_USB_MODE;
+                Usb_Auto_Switch_Resume_Mode = Keyboard_Info.Key_Mode;
+                Keyboard_Info.Key_Mode      = QMK_USB_MODE;
                 Spi_Send_Commad(USER_SWITCH_USB_MODE);
                 es_restart_usb_driver();
                 Led_Rf_Pair_Flg = false;
@@ -457,6 +472,35 @@ OSAL_IRQ_HANDLER(Vector78) {
     }
 
     OSAL_IRQ_EPILOGUE();
+}
+
+// Called from the main loop: leaves a cable-forced USB mode once the cable is gone.
+void Usb_Auto_Switch_Task(void) {
+#if USB_AUTO_SWITCH_ENABLE
+    // A wireless mode picked explicitly while plugged in wins over the resume mode.
+    // Guarded because the SysTick auto-switch sets both fields.
+    __disable_irq();
+    if (Keyboard_Info.Key_Mode != QMK_USB_MODE) {
+        Usb_Auto_Switch_Resume_Mode = QMK_USB_MODE;
+    }
+    __enable_irq();
+
+    if (Usb_Auto_Switch_Resume_Mode == QMK_USB_MODE || gpio_read_pin(ES_USB_POWER_IO)) {
+        Usb_Unplug_Timer = timer_read();
+        return;
+    }
+    if (timer_elapsed(Usb_Unplug_Timer) < USB_UNPLUG_DEBOUNCE_TIME) {
+        return;
+    }
+
+    Usb_Disconnect();
+    Keyboard_Info.Key_Mode      = Usb_Auto_Switch_Resume_Mode;
+    Usb_Auto_Switch_Resume_Mode = QMK_USB_MODE;
+    Mode_Synchronization(); // Tell the RF module which wireless mode/channel to use
+    Led_Rf_Pair_Flg      = true;
+    Show_Mode_Indicator  = true;
+    Mode_Indicator_Timer = timer_read();
+#endif
 }
 
 void Init_Keyboard_Infomation(void) {

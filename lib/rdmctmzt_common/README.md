@@ -73,6 +73,7 @@ Define these in your keyboard's `config.h` to customize behavior:
 | `USB_AUTO_SWITCH_ENABLE`          | `1` (on)  | Automatically switch to USB mode when cable is plugged in |
 | `LED_CONNECTION_INDICATOR_ENABLE` | `0` (off) | Always show connection type on `LED_CONNECTION_INDEX`     |
 | `LOGO_LED_ENABLE`                 | `0` (off) | Enable Logo LED feature with independent effects          |
+| `HAS_MODE_SWITCH`                 | `1` (on)  | Read a 3-position USB/2.4G/BT switch on boot (see below)  |
 
 ### Required LED Index Definitions
 
@@ -210,13 +211,21 @@ The library supports a physical 3-position mode switch:
 | 2.4G            | `MODE_2P4G_IO` LOW | `MODE_SWITCH_2P4G` |
 | BT              | `MODE_BLE_IO` LOW  | `MODE_SWITCH_BT`   |
 
+Boards without this switch (e.g. only a battery power switch, like the Chosfox
+Geonix Rev 2 / 2.5) **must** set `#define HAS_MODE_SWITCH 0`. Otherwise the
+unconnected pins read as "USB" and every boot comes up in USB mode instead of
+the saved wireless mode.
+
 ### USB Auto-Switch Feature
 
 When `USB_AUTO_SWITCH_ENABLE = 1` (default):
 
 - Keyboard automatically switches to USB mode when cable is connected
 - Works regardless of physical switch position
-- Previous wireless mode is restored when cable is unplugged
+- Previous wireless mode is restored when cable is unplugged (after 500ms without VBUS)
+- A USB mode forced by the cable is not saved to flash; the previous wireless mode is
+  saved instead, so powering up on battery resumes wireless. Selecting USB with the
+  `MD_USB` key while unplugged, or any wireless mode while plugged in, is saved as usual.
 
 To disable, add to `config.h`:
 
