@@ -1163,6 +1163,24 @@ void housekeeping_task_kb(void) { // loop
 
     charging_state = gpio_read_pin(HS_BAT_CABLE_PIN);
 
+    // VBUS came back (host powered on after a full shutdown) while in USB mode:
+    // force a clean re-enumeration, same as a physical replug. The battery keeps
+    // the MCU alive across host shutdown, so USB would otherwise stay stuck
+    // suspended with the D+ pull-up still asserted.
+    static bool last_cable_state = true;
+    if (is_keyboard_master() && charging_state != last_cable_state) {
+        last_cable_state = charging_state;
+        if (charging_state && wireless_get_current_devs() == DEVS_USB) {
+            dprintf("VBUS restored, restarting USB\n");
+            usb_power_disconnect();
+            usbDisconnectBus(&USBD1);
+            usbStop(&USBD1);
+            wait_ms(50);
+            usb_power_connect();
+            restart_usb_driver(&USBD1);
+        }
+    }
+
     bat_full_flag = gpio_read_pin(BAT_FULL_PIN);
 
     if (charging_state && (bat_full_flag)) {
