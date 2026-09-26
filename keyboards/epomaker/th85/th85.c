@@ -84,6 +84,7 @@ bool led_update_kb(led_t led_state) {
 
 void housekeeping_task_kb(void) {
     kb_housekeeping_task();
+    housekeeping_task_user();
 }
 
 void board_init(void) {

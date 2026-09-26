@@ -363,20 +363,47 @@ Logo LED settings are available in VIA under the "Lighting" tab using channel 2 
    // LED matrix configuration
    led_config_t g_led_config = { ... };
 
-   // QMK callbacks - delegate to library
-   bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+   // QMK callbacks - delegate to library, but preserve keymap/user hooks
+   bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+       if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
+           return false;
+       }
        return kb_rgb_matrix_indicators_common(led_min, led_max);
    }
 
-   bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+   bool led_update_kb(led_t led_state) {
+       if (!led_update_user(led_state)) {
+           return false;
+       }
+       return kb_led_update(led_state);
+   }
+
+   bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+       if (!process_record_user(keycode, record)) {
+           return false;
+       }
        return kb_process_record_common(keycode, record);
    }
 
+   void notify_usb_device_state_change_kb(struct usb_device_state state) {
+       kb_notify_usb_device_state_change(state);
+       notify_usb_device_state_change_user(state);
+   }
+
+   void housekeeping_task_kb(void) {
+       kb_housekeeping_task();
+       housekeeping_task_user();
+   }
+
+   void keyboard_post_init_kb(void) {
+       kb_keyboard_post_init();
+       keyboard_post_init_user();
+   }
+
+   // board_init has no _user counterpart
    void board_init(void) {
        kb_board_init();
    }
-
-   // ... other callback wrappers
    ```
 
 ### Library Files Overview
