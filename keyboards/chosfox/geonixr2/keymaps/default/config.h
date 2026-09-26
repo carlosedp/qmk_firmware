@@ -17,3 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 // Custom configuration
+#pragma once
+
+#define DYNAMIC_KEYMAP_LAYER_COUNT 8

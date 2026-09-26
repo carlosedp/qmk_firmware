@@ -31,15 +31,14 @@
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
 
 #ifndef NOP_FUDGE
-#    define NOP_FUDGE 0.4
+#define NOP_FUDGE 0.4
 #endif
 
 // Emulated EEPROM (lib/rdmctmzt_common/user_eeprom.c): two fixed 8kB flash
 // pages at 0x1C000, mirrored in RAM. EEPROM_SIZE only sets how much of them
 // is used; 2048 leaves ~1000 writes between page erases.
 #define EEPROM_SIZE 2048
-#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR (EEPROM_SIZE - 1)
-#define DYNAMIC_KEYMAP_LAYER_COUNT 8
+#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 2047
 #define EECONFIG_USER_DATA_SIZE 4
 #define EECONFIG_KB_DATA_SIZE 1
 

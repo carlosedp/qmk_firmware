@@ -31,8 +31,7 @@
 // pages at 0x1C000, mirrored in RAM. EEPROM_SIZE only sets how much of them
 // is used; 2048 leaves ~1000 writes between page erases.
 #define EEPROM_SIZE 2048
-#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR (EEPROM_SIZE - 1)
-#define DYNAMIC_KEYMAP_LAYER_COUNT 16
+#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR 2047
 #define EECONFIG_USER_DATA_SIZE 4
 #define EECONFIG_KB_DATA_SIZE 1
 
@@ -45,8 +44,8 @@
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
 #define RGB_MATRIX_SLEEP
 
-#define RGB_MATRIX_SPD_STEP   16                 // 设置 RGB 矩阵速度步进值
-#define RGB_MATRIX_VAL_STEP   16                 // 设置 RGB 矩阵亮度步进值
+#define RGB_MATRIX_SPD_STEP 16 // 设置 RGB 矩阵速度步进值
+#define RGB_MATRIX_VAL_STEP 16 // 设置 RGB 矩阵亮度步进值
 
 // BLE configuration for GEONIX REV.2.5 OSS port
 #define USER_BLE_ID (0X0116)
@@ -72,12 +71,12 @@
 #define LOGO_LED_ENABLE 1       // Enable Logo LED functionality
 #define LED_LOGO_INDEX 48       // Logo LED starting index (48-76 are logo/bottom LEDs)
 #define LOGO_LED_COUNT 29       // Number of logo/bottom LEDs
-#define LED_CONNECTION_INDEX 11  // BSPC - connection type indicator
-#define LED_CAP_INDEX        12  // ESC  - Caps Lock indicator
-#define LED_WIN_L_INDEX      40  // LGUI - Win Lock indicator (Win key lights up when locked)
-#define LED_BATT_INDEX       36  // MO2  - Battery status indicator
-#define LED_BLE_1_INDEX       1  // Q    - BLE channel 1
-#define LED_BLE_2_INDEX       2  // W    - BLE channel 2
-#define LED_BLE_3_INDEX       3  // E    - BLE channel 3
-#define LED_2P4G_INDEX        4  // R    - 2.4G mode
-#define LED_USB_INDEX         0  // TAB  - USB mode (matches original REV.2.5 behavior)
+#define LED_CONNECTION_INDEX 11 // BSPC - connection type indicator
+#define LED_CAP_INDEX 12        // ESC  - Caps Lock indicator
+#define LED_WIN_L_INDEX 40      // LGUI - Win Lock indicator (Win key lights up when locked)
+#define LED_BATT_INDEX 36       // MO2  - Battery status indicator
+#define LED_BLE_1_INDEX 1       // Q    - BLE channel 1
+#define LED_BLE_2_INDEX 2       // W    - BLE channel 2
+#define LED_BLE_3_INDEX 3       // E    - BLE channel 3
+#define LED_2P4G_INDEX 4        // R    - 2.4G mode
+#define LED_USB_INDEX 0         // TAB  - USB mode (matches original REV.2.5 behavior)
