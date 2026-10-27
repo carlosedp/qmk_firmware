@@ -63,6 +63,11 @@
 #define USER_BLE2_NAME "Hack70-2"
 #define USER_BLE3_NAME "Hack70-3"
 
+// Mode switch: the Hack70 PCB wires the BT/2.4G positions opposite to the
+// rdmctmzt_common default (vendor firmware: MODE_BLE_IO=B12, MODE_2P4G_IO=B13)
+#define MODE_BLE_IO (B12)
+#define MODE_2P4G_IO (B13)
+
 // Logo LED
 #define LOGO_LED_ENABLE 1 // Enable Logo LED functionality
 #define LED_LOGO_INDEX 70 // Logo LED starting index (after the 70 keys)
