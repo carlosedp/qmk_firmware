@@ -48,8 +48,13 @@
 #define ES_LED_POWER_IO (D0)
 
 // Mode switch pins (from original working implementation)
-#define MODE_2P4G_IO (B12) // 2.4G mode detection
-#define MODE_BLE_IO (B13)  // BLE mode detection
+// Override both in the keyboard's config.h if the PCB wires the switch the other way round.
+#ifndef MODE_2P4G_IO
+#    define MODE_2P4G_IO (B12) // 2.4G mode detection
+#endif
+#ifndef MODE_BLE_IO
+#    define MODE_BLE_IO (B13) // BLE mode detection
+#endif
 
 #define PAL_ES32_PUPDR_PULLDOWN PAL_ES32_PUD_PULLDOWN
 
