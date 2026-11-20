@@ -30,8 +30,6 @@
 /* Ensure we jump to bootloader if the RESET keycode was pressed */
 #define EARLY_INIT_PERFORM_BOOTLOADER_JUMP TRUE
 
-#define DEBOUNCE 5
-
 #ifndef NOP_FUDGE
 #    define NOP_FUDGE 0.4
 #endif
@@ -51,7 +49,6 @@
 #define RGB_MATRIX_KEYRELEASES
 #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
 #define RGB_DISABLE_AFTER_TIMEOUT 0
-#define RGB_MATRIX_LED_FLUSH_LIMIT 16
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 180
 #define RGB_MATRIX_SLEEP
 
